@@ -1,0 +1,9 @@
+{
+  "type": "module",
+  "name": "monolith",
+  "version": "1.0.0",
+  "main": "src/index.ts",
+  "scripts": {
+    "develop": "tsx watch src/index.ts"
+  }
+}

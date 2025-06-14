@@ -1,0 +1,9 @@
+import EventEmitter from "node:events";
+import { API } from "../../api/src/index.js";
+import { Ping } from "../../ping/src/index.js";
+
+const events = new EventEmitter();
+const api = new API({ events });
+new Ping({ events });
+
+await api.listen();
