@@ -6,11 +6,15 @@ export class API {
   #events;
   #fastify;
 
-  constructor({ events }: { events: EventEmitter }) {
+  constructor({
+    events,
+    logger = false,
+  }: {
+    events: EventEmitter;
+    logger?: boolean;
+  }) {
     this.#events = events;
-    this.#fastify = Fastify({
-      logger: true,
-    });
+    this.#fastify = Fastify({ logger });
     this.#fastify.get("/ping", async (request, reply) => {
       const promise = once(this.#events, pingEvents.pong);
       this.#events.emit(pingEvents.ping);
@@ -26,5 +30,9 @@ export class API {
       this.#fastify.log.error(err);
       process.exit(1);
     }
+  }
+
+  async close() {
+    await this.#fastify.close();
   }
 }
