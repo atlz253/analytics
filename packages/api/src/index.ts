@@ -1,6 +1,6 @@
 import Fastify from "fastify";
-import EventEmitter, { once } from "node:events";
-import pingEvents from "../../ping/src/events";
+import EventEmitter from "node:events";
+import pingRoute from "./routes/ping";
 
 export class API {
   #events;
@@ -14,13 +14,7 @@ export class API {
     logger?: boolean;
   }) {
     this.#events = events;
-    this.#fastify = Fastify({ logger });
-    this.#fastify.get("/ping", async (request, reply) => {
-      const promise = once(this.#events, pingEvents.pong);
-      this.#events.emit(pingEvents.ping);
-      const [response] = await promise;
-      return { response };
-    });
+    this.#fastify = Fastify({ logger }).register(pingRoute, { events });
   }
 
   async listen() {
