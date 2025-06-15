@@ -1,21 +1,22 @@
-import EventEmitter, { once } from "node:events";
 import { beforeEach, describe, expect, test } from "vitest";
 import { Ping } from "../src";
 import eventNames from "../src/events";
+import { ImmutableEventEmitter } from "../../shared/src/ImmutableEventEmitter";
 
 describe("ping", () => {
-  let events: EventEmitter = new EventEmitter();
+  let events = new ImmutableEventEmitter();
   let ping = new Ping({ events });
 
   beforeEach(() => {
-    events = new EventEmitter();
+    events = new ImmutableEventEmitter();
     ping = new Ping({ events });
   });
 
   test("ping отвечает pong", async () => {
-    const promise = once(events, eventNames.pong);
-    events.emit(eventNames.ping);
-    const [result] = await promise;
-    expect(result).toEqual("pong");
+    const response = await events.request<string>(
+      eventNames.ping,
+      eventNames.pong
+    );
+    expect(response).toEqual("pong");
   });
 });

@@ -12,9 +12,13 @@
   "author": "Fedor Alekseev",
   "license": "MIT",
   "devDependencies": {
+    "@types/ramda": "^0.30.2",
     "@types/node": "^24.0.1",
     "tsx": "^4.20.3",
     "typescript": "^5.8.3",
     "vitest": "^3.2.3"
+  },
+  "dependencies": {
+    "ramda": "^0.30.1"
   }
 }

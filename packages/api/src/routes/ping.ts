@@ -1,13 +1,14 @@
 import { FastifyPluginCallback } from "fastify";
-import EventEmitter, { once } from "node:events";
 import pingEvents from "../../../ping/src/events";
+import { ImmutableEventEmitter } from "../../../shared/src/ImmutableEventEmitter";
 
 export default ((fastify, { events }, done) => {
   fastify.get("/ping", async () => {
-    const promise = once(events, pingEvents.pong);
-    events.emit(pingEvents.ping);
-    const [response] = await promise;
-    return { response };
+    const response = await events.request<string>(
+      pingEvents.ping,
+      pingEvents.pong
+    );
+    return { statusCode: 200, response };
   });
   done();
-}) as FastifyPluginCallback<{ events: EventEmitter }>;
+}) as FastifyPluginCallback<{ events: ImmutableEventEmitter }>;

@@ -1,15 +1,17 @@
-import EventEmitter from "node:events";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { API } from "../src";
 import { Ping } from "../../ping/src";
+import { localhost } from "./utils/address";
+import { ImmutableEventEmitter } from "../../shared/src/ImmutableEventEmitter";
 
-describe("API", () => {
-  let events = new EventEmitter();
+describe("/ping", () => {
+  let events = new ImmutableEventEmitter();
   let api = new API({ events });
 
   beforeEach(async () => {
-    events = new EventEmitter();
+    events = new ImmutableEventEmitter();
     api = new API({ events });
+    new Ping({ events });
     await api.listen();
   });
 
@@ -17,9 +19,11 @@ describe("API", () => {
     await api.close();
   });
 
-  test("/ping работает", async () => {
-    new Ping({ events });
-    const response = await fetch("http://localhost:3000/ping");
-    expect(await response.json()).toEqual({ response: "pong" });
+  test("возвращает pong", async () => {
+    const response = await fetch(localhost(api.port) + "/ping");
+    expect(await response.json()).toEqual({
+      statusCode: 200,
+      response: "pong",
+    });
   });
 });

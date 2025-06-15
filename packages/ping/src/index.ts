@@ -3,6 +3,8 @@ import pingEvents from "./events";
 
 export class Ping {
   constructor({ events }: { events: EventEmitter }) {
-    events.on(pingEvents.ping, () => events.emit(pingEvents.pong, "pong"));
+    events.on(pingEvents.ping, (event) =>
+      events.emit(pingEvents.pong, { ...event, response: "pong" })
+    );
   }
 }
