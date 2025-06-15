@@ -1,8 +1,8 @@
-import EventEmitter from "node:events";
 import pingEvents from "./events";
+import { ImmutableEventEmitter } from "../../shared/src/ImmutableEventEmitter";
 
 export class Ping {
-  constructor({ events }: { events: EventEmitter }) {
+  constructor({ events }: { events: ImmutableEventEmitter }) {
     events.on(pingEvents.ping, (event) =>
       events.emit(pingEvents.pong, { ...event, response: "pong" })
     );

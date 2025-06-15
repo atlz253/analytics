@@ -1,7 +1,7 @@
 import Fastify from "fastify";
-import EventEmitter from "node:events";
 import pingRoute from "./routes/ping";
 import eventRoute from "./routes/event";
+import { ImmutableEventEmitter } from "../../shared/src/ImmutableEventEmitter";
 
 export class API {
   #events;
@@ -16,7 +16,7 @@ export class API {
     events,
     logger = false,
   }: {
-    events: EventEmitter;
+    events: ImmutableEventEmitter;
     logger?: boolean;
   }) {
     this.#events = events;
@@ -30,8 +30,7 @@ export class API {
     try {
       await this.#fastify.listen({ port: 0, host: "0.0.0.0" });
     } catch (err) {
-      // this.#fastify.log.error(err);
-      console.error(err);
+      this.#fastify.log.error(err);
       process.exit(1);
     }
   }

@@ -1,8 +1,8 @@
-import EventEmitter from "node:events";
 import { API } from "../../api/src/index.js";
 import { Ping } from "../../ping/src/index.js";
+import { ImmutableEventEmitter } from "../../shared/src/ImmutableEventEmitter.js";
 
-const events = new EventEmitter();
+const events = new ImmutableEventEmitter();
 const api = new API({ events, logger: true });
 new Ping({ events });
 
