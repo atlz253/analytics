@@ -1,16 +1,17 @@
 import EventEmitter from "node:events";
 import eventNames from "./events";
-import { RAMStorage } from "./storage";
+import { ImmutableEventEmitter } from "../../shared/src/ImmutableEventEmitter";
+import { storage as getStorage, Storage } from "./storage";
 
-export class Events {
+class Events {
   #storage;
 
-  constructor({ events, storage }: { events: EventEmitter; storage: "RAM" }) {
-    this.#storage = new RAMStorage();
+  constructor({ events, storage }: { events: EventEmitter; storage: Storage }) {
+    this.#storage = storage;
     events.on(eventNames.create, this.#createEvent.bind(this));
   }
 
-  async #createEvent(event: object) {
+  async #createEvent(event: { createTime: string }) {
     event.createTime = new Date().toISOString();
     await this.#storage.createEvent(event);
   }
@@ -18,4 +19,14 @@ export class Events {
   last() {
     return this.#storage.last();
   }
+}
+
+export async function events({
+  events,
+  storage,
+}: {
+  events: ImmutableEventEmitter;
+  storage: "RAM" | "mongo";
+}) {
+  return new Events({ events, storage: await getStorage(storage) });
 }

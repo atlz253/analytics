@@ -1,23 +1,23 @@
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { API } from "../src";
 import { localhost } from "./utils/address";
-import { Events } from "../../events/src";
+import { events as initEvents } from "../../events/src";
 import { ImmutableEventEmitter } from "../../shared/src/ImmutableEventEmitter";
 import { omit } from "ramda";
 import fastify from "./utils/fastify";
 import { post } from "../src/routes/fetch";
 
-describe("/event", () => {
+describe("/event", async () => {
   let events = new ImmutableEventEmitter();
   let api = new API({ events });
-  let eventsModule = new Events({ events, storage: "RAM" });
+  let eventsModule = await initEvents({ events, storage: "RAM" });
 
   const url = () => localhost(api.port) + "/event";
 
   beforeEach(async () => {
     events = new ImmutableEventEmitter();
     api = new API({ events });
-    eventsModule = new Events({ events, storage: "RAM" });
+    eventsModule = await initEvents({ events, storage: "RAM" });
     await api.listen();
   });
 
