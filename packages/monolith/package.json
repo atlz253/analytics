@@ -4,6 +4,8 @@
   "version": "1.0.0",
   "main": "src/index.ts",
   "scripts": {
+    "start": "node dist/index.cjs",
+    "build": "tsx scripts/esbuild.ts",
     "develop": "tsx watch src/index.ts"
   }
 }

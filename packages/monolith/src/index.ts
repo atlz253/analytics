@@ -6,5 +6,8 @@ const events = new ImmutableEventEmitter();
 const api = new API({ events, logger: true });
 new Ping({ events });
 
-await api.listen();
-console.log(`API доступен по адресу: http://localhost:${api.port}`);
+api
+  .listen()
+  .then(() =>
+    console.log(`API доступен по адресу: http://localhost:${api.port}`)
+  );
