@@ -13,7 +13,7 @@ interface UserActivityEvent {
 export default ((fastify, { events }, done) => {
   fastify.route<{ Body: UserActivityEvent }>({
     method: "POST",
-    url: "/event",
+    url: "/",
     schema: {
       body: {
         type: "object",

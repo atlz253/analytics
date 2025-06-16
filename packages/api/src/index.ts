@@ -6,7 +6,6 @@ import { ImmutableEventEmitter } from "../../shared/src/ImmutableEventEmitter";
 
 export class API {
   #port;
-  #events;
   #fastify;
 
   get port() {
@@ -28,12 +27,13 @@ export class API {
     port?: number;
   }) {
     this.#port = port;
-    this.#events = events;
     this.#fastify = Fastify({ logger });
-    [pingRoute, eventRoute].forEach((r) =>
-      this.#fastify.register(r, { events })
-    );
-    this.#fastify.register(reportRoute, { events, prefix: "/report" });
+    const routes = [
+      [pingRoute, { events, prefix: "/ping" }],
+      [eventRoute, { events, prefix: "/event" }],
+      [reportRoute, { events, prefix: "/report" }],
+    ] as const;
+    routes.forEach(([plugin, opts]) => this.#fastify.register(plugin, opts));
   }
 
   async listen() {

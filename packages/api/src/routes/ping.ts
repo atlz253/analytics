@@ -3,7 +3,7 @@ import pingEvents from "../../../ping/src/events";
 import { ImmutableEventEmitter } from "../../../shared/src/ImmutableEventEmitter";
 
 export default ((fastify, { events }, done) => {
-  fastify.get("/ping", async () => {
+  fastify.get("/", async () => {
     const response = await events.request<string>(
       pingEvents.ping,
       pingEvents.pong
