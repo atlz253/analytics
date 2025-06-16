@@ -11,6 +11,23 @@ export default ((fastify, { events }, done) => {
     schema: {
       body: {
         type: "object",
+        required: ["timeInterval"],
+        properties: {
+          timeInterval: {
+            type: "object",
+            required: ["start"],
+            properties: {
+              start: {
+                type: "string",
+                format: "date",
+              },
+              end: {
+                type: "string",
+                format: "date",
+              },
+            },
+          },
+        },
       },
     },
   });
@@ -24,6 +41,23 @@ export default ((fastify, { events }, done) => {
     schema: {
       body: {
         type: "object",
+        required: ["timeInterval"],
+        properties: {
+          timeInterval: {
+            type: "object",
+            required: ["start"],
+            properties: {
+              start: {
+                type: "string",
+                format: "date",
+              },
+              end: {
+                type: "string",
+                format: "date",
+              },
+            },
+          },
+        },
       },
     },
   });
@@ -37,6 +71,23 @@ export default ((fastify, { events }, done) => {
     schema: {
       body: {
         type: "object",
+        required: ["timeInterval"],
+        properties: {
+          timeInterval: {
+            type: "object",
+            required: ["start"],
+            properties: {
+              start: {
+                type: "string",
+                format: "date",
+              },
+              end: {
+                type: "string",
+                format: "date",
+              },
+            },
+          },
+        },
       },
     },
   });
@@ -50,6 +101,23 @@ export default ((fastify, { events }, done) => {
     schema: {
       body: {
         type: "object",
+        required: ["timeInterval"],
+        properties: {
+          timeInterval: {
+            type: "object",
+            required: ["start"],
+            properties: {
+              start: {
+                type: "string",
+                format: "date",
+              },
+              end: {
+                type: "string",
+                format: "date",
+              },
+            },
+          },
+        },
       },
     },
   });
