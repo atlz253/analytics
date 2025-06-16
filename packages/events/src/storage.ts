@@ -1,6 +1,7 @@
 import { Db, MongoClient } from "mongodb";
+import { UserActivityEvent } from "./types";
 
-type StorageType = "RAM" | "mongo";
+export type StorageType = "RAM" | "mongo";
 
 export abstract class Storage {
   abstract createEvent(event: object): Promise<void>;
@@ -8,12 +9,27 @@ export abstract class Storage {
   abstract last(): Promise<object | undefined>;
 }
 
-class RAMStorage extends Storage {
-  #storage: { events: object[] } = {
-    events: [],
-  };
+interface RAMStorageObject {
+  events: Array<UserActivityEvent>;
+}
 
-  async createEvent(event: object) {
+interface RAMStorageOptions {
+  storage?: RAMStorageObject;
+}
+
+class RAMStorage extends Storage {
+  #storage;
+
+  constructor({
+    storage = {
+      events: [],
+    },
+  }: RAMStorageOptions = {}) {
+    super();
+    this.#storage = storage;
+  }
+
+  async createEvent(event: UserActivityEvent) {
     this.#storage.events.push(event);
   }
 
@@ -41,10 +57,12 @@ class MongoStorage extends Storage {
   }
 }
 
-export async function storage(type: StorageType) {
+export type StorageOptions = (RAMStorageOptions & { type: "RAM" }) | { type: "mongo" };
+
+export async function storage({ type, ...options }: StorageOptions) {
   switch (type) {
     case "RAM":
-      return new RAMStorage();
+      return new RAMStorage(options);
     case "mongo":
       const client = new MongoClient("mongodb://root:example@mongodb:27017/");
       await client.connect();

@@ -1,7 +1,7 @@
 import EventEmitter from "node:events";
 import eventNames from "./events";
 import { ImmutableEventEmitter } from "../../shared/src/ImmutableEventEmitter";
-import { storage as getStorage, Storage } from "./storage";
+import { storage as getStorage, Storage, StorageOptions } from "./storage";
 
 class Events {
   #storage;
@@ -26,7 +26,7 @@ export async function events({
   storage,
 }: {
   events: ImmutableEventEmitter;
-  storage: "RAM" | "mongo";
+  storage: StorageOptions;
 }) {
   return new Events({ events, storage: await getStorage(storage) });
 }
