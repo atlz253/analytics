@@ -5,7 +5,7 @@ import { events as initEvents } from "../../events/src";
 import { ImmutableEventEmitter } from "../../shared/src/ImmutableEventEmitter";
 import { omit } from "ramda";
 import fastify from "./utils/fastify";
-import { post } from "../src/routes/fetch";
+import { post } from "./utils/fetch";
 
 describe("/event", async () => {
   let events = new ImmutableEventEmitter();
