@@ -1,6 +1,7 @@
 import Fastify from "fastify";
 import pingRoute from "./routes/ping";
 import eventRoute from "./routes/event";
+import reportRoute from "./routes/report";
 import { ImmutableEventEmitter } from "../../shared/src/ImmutableEventEmitter";
 
 export class API {
@@ -32,6 +33,7 @@ export class API {
     [pingRoute, eventRoute].forEach((r) =>
       this.#fastify.register(r, { events })
     );
+    this.#fastify.register(reportRoute, { events, prefix: "/report" });
   }
 
   async listen() {
