@@ -1,6 +1,6 @@
 import { FastifyPluginCallback } from "fastify";
 import EventEmitter from "node:events";
-import eventNames from "../../../events/src/events";
+import eventNames from "../../../events/src/events.js";
 
 interface UserActivityEvent {
   eventType: "userActivity";
@@ -8,6 +8,7 @@ interface UserActivityEvent {
   type: string;
   userUUID: string;
   page: string;
+  [key: string]: unknown;
 }
 
 export default ((fastify, { events }, done) => {
@@ -41,7 +42,10 @@ export default ((fastify, { events }, done) => {
       },
     },
     handler: async (request, reply) => {
-      events.emit(eventNames.create, request.body);
+      events.emit(eventNames.create, {
+        ...request.body,
+        occurrenceTime: new Date(request.body.occurrenceTime),
+      });
       return { statusCode: 200 };
     },
   });

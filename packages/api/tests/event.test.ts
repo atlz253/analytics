@@ -52,7 +52,10 @@ describe("/event", async () => {
     expect(typeof lastEvent).toBe("object");
     if (lastEvent !== undefined && "createTime" in lastEvent)
       delete lastEvent.createTime;
-    expect(lastEvent).toEqual(event);
+    expect(lastEvent).toEqual({
+      ...event,
+      occurrenceTime: new Date(event.occurrenceTime),
+    });
   });
 
   test("должны присутствовать все обязательные поля", async () => {
@@ -96,6 +99,9 @@ describe("/event", async () => {
     const last = await eventsModule.last();
     if (typeof last === "object" && "createTime" in last)
       delete last.createTime;
-    expect(last).toEqual(event);
+    expect(last).toEqual({
+      ...event,
+      occurrenceTime: new Date(event.occurrenceTime),
+    });
   });
 });

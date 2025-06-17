@@ -1,9 +1,9 @@
 export interface UserActivityEvent {
   eventType: "userActivity";
-  occurrenceTime: string;
+  occurrenceTime: Date;
   type: string;
   userUUID: string;
   page: string;
-  createTime?: string;
+  createTime?: Date;
   [key: string]: unknown;
 }
