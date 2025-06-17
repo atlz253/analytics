@@ -1,5 +1,6 @@
 import { Db, MongoClient } from "mongodb";
-import { UserActivityEvent } from "./types";
+import { UserActivityEvent } from "./types.js";
+import { TimeInterval } from "../../shared/src/types/timeInterval.js";
 
 export type StorageType = "RAM" | "mongo";
 
@@ -7,6 +8,10 @@ export abstract class Storage {
   abstract createEvent(event: object): Promise<void>;
 
   abstract last(): Promise<object | undefined>;
+
+  abstract readEvents(options: {
+    timeInterval: TimeInterval;
+  }): Promise<Array<UserActivityEvent>>;
 }
 
 interface RAMStorageObject {
@@ -36,6 +41,19 @@ class RAMStorage extends Storage {
   async last() {
     return this.#storage.events.at(-1);
   }
+
+  async readEvents({
+    timeInterval,
+  }: {
+    timeInterval: TimeInterval;
+  }): Promise<Array<UserActivityEvent>> {
+    return this.#storage.events.filter(
+      (e) =>
+        new Date(e.occurrenceTime) >= new Date(timeInterval.start) &&
+        (timeInterval.end === undefined ||
+          new Date(e.occurrenceTime) <= new Date(timeInterval.end))
+    );
+  }
 }
 
 class MongoStorage extends Storage {
@@ -55,9 +73,17 @@ class MongoStorage extends Storage {
       .collection("userActivity")
       .findOne({}, { sort: { _id: -1 } }) as Promise<object | undefined>;
   }
+
+  readEvents(options: {
+    timeInterval: TimeInterval;
+  }): Promise<Array<UserActivityEvent>> {
+    throw new Error("not implemented");
+  }
 }
 
-export type StorageOptions = (RAMStorageOptions & { type: "RAM" }) | { type: "mongo" };
+export type StorageOptions =
+  | (RAMStorageOptions & { type: "RAM" })
+  | { type: "mongo" };
 
 export async function storage({ type, ...options }: StorageOptions) {
   switch (type) {

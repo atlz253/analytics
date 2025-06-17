@@ -4,5 +4,6 @@ export interface UserActivityEvent {
   type: string;
   userUUID: string;
   page: string;
+  createTime?: string;
   [key: string]: unknown;
 }

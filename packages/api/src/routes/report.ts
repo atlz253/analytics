@@ -1,12 +1,18 @@
 import { FastifyPluginCallback } from "fastify";
 import { ImmutableEventEmitter } from "../../../shared/src/ImmutableEventEmitter.js";
+import eventNames from "../../../report/src/events.js";
 
 export default ((fastify, { events }, done) => {
   fastify.route({
     method: "POST",
     url: "/users",
     handler: async (request, reply) => {
-      return { statusCode: 200 };
+      const users = await events.request(
+        eventNames.createUsersReport,
+        eventNames.createUsersReportAfter,
+        request.body
+      );
+      return { statusCode: 200, users: users };
     },
     schema: {
       body: {

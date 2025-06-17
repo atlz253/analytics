@@ -7,6 +7,8 @@ import urlJoin from "url-join";
 import fastify from "./utils/fastify.js";
 import { events as initEvents } from "../../events/src/index.js";
 import { post } from "./utils/fetch.js";
+import eventsEventNames from "../../events/src/events.js";
+import { UserActivityEvent } from "events/src/types.js";
 
 describe("/report", async () => {
   let events = new ImmutableEventEmitter();
@@ -75,5 +77,62 @@ describe("/report", async () => {
         statusCode: 400,
       })
     );
+  });
+
+  test("/users возвращает список пользователей с зарегистрированными событиями", async () => {
+    await events.request<[Array<UserActivityEvent>]>(
+      eventsEventNames.createMultiple,
+      eventsEventNames.createMultipleAfter,
+      [
+        {
+          eventType: "userActivity",
+          userUUID: "57ee3021-b856-4dc6-8af3-2310ab047256",
+          type: "load",
+          occurrenceTime: "2025-06-17T11:26:21.865Z",
+          page: "test",
+        },
+        {
+          eventType: "userActivity",
+          userUUID: "32c2b348-6882-4224-92c2-13faf09080bd",
+          type: "load",
+          occurrenceTime: "2025-05-15T11:26:21.865Z",
+          page: "test",
+        },
+        {
+          eventType: "userActivity",
+          userUUID: "a8636665-83c7-4537-b81c-a6e10d976f56",
+          type: "load",
+          occurrenceTime: "2024-03-20T11:26:21.865Z",
+          page: "test",
+        },
+        {
+          eventType: "userActivity",
+          userUUID: "a8636665-83c7-4537-b81c-a6e10d976f56",
+          type: "click",
+          occurrenceTime: "2024-03-20T11:27:21.865Z",
+          page: "test",
+        },
+        {
+          eventType: "userActivity",
+          userUUID: "a8636665-83c7-4537-b81c-a6e10d976f56",
+          type: "click",
+          occurrenceTime: "2024-03-20T11:29:21.865Z",
+          page: "test",
+        },
+      ]
+    );
+    const response = await post(url("/users"), {
+      body: JSON.stringify({
+        timeInterval: { start: "2024-03-20" },
+      }),
+    });
+    expect(response).toEqual({
+      statusCode: 200,
+      users: {
+        "57ee3021-b856-4dc6-8af3-2310ab047256": { eventsCount: 1 },
+        "32c2b348-6882-4224-92c2-13faf09080bd": { eventsCount: 1 },
+        "a8636665-83c7-4537-b81c-a6e10d976f56": { eventsCount: 3 },
+      },
+    });
   });
 });
