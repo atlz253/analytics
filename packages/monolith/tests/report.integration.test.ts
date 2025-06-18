@@ -123,4 +123,121 @@ describe("Создание отчетов", async () => {
       },
     });
   });
+
+  test("Отчет о зарегистрированных событиях активности пользователя должен работать", async () => {
+    const userEvents: Array<UserActivityEvent> = [
+      {
+        eventType: "userActivity",
+        occurrenceTime: new Date("2025-01-12T08:45:23.156Z"),
+        type: "page_view",
+        userUUID: "f3e7a9b2-4c5d-6789-0123-456789abcdef",
+        page: "home",
+      },
+      {
+        eventType: "userActivity",
+        occurrenceTime: new Date("2025-01-13T08:46:15.789Z"),
+        type: "click",
+        userUUID: "f3e7a9b2-4c5d-6789-0123-456789abcdef",
+        page: "home",
+      },
+      {
+        eventType: "userActivity",
+        occurrenceTime: new Date("2025-01-14T08:48:37.234Z"),
+        type: "scroll",
+        userUUID: "f3e7a9b2-4c5d-6789-0123-456789abcdef",
+        page: "products",
+      },
+      {
+        eventType: "userActivity",
+        occurrenceTime: new Date("2025-01-14T08:48:37.234Z"),
+        type: "scroll",
+        userUUID: "f3e7a9b2-4c5d-6789-0123-456789abcdef",
+        page: "products",
+      },
+      {
+        eventType: "userActivity",
+        occurrenceTime: new Date("2025-02-03T14:22:41.567Z"),
+        type: "hover",
+        userUUID: "b8d4f1c7-2e9a-5678-9012-345678901bcd",
+        page: "catalog",
+      },
+      {
+        eventType: "userActivity",
+        occurrenceTime: new Date("2025-02-03T14:25:09.890Z"),
+        type: "double_click",
+        userUUID: "b8d4f1c7-2e9a-5678-9012-345678901bcd",
+        page: "product-details",
+      },
+      {
+        eventType: "userActivity",
+        occurrenceTime: new Date("2025-03-18T16:33:52.112Z"),
+        type: "key_press",
+        userUUID: "a5c9e2f8-1b6d-7890-1234-567890123def",
+        page: "search",
+      },
+      {
+        eventType: "userActivity",
+        occurrenceTime: new Date("2025-01-25T10:17:28.445Z"),
+        type: "form_submit",
+        userUUID: "f3e7a9b2-4c5d-6789-0123-456789abcdef",
+        page: "contact",
+      },
+      {
+        eventType: "userActivity",
+        occurrenceTime: new Date("2024-12-19T20:59:14.678Z"),
+        type: "focus",
+        userUUID: "d7b3a6e1-8f4c-9012-3456-789012345fab",
+        page: "login",
+      },
+      {
+        eventType: "userActivity",
+        occurrenceTime: new Date("2024-12-19T21:02:03.321Z"),
+        type: "blur",
+        userUUID: "d7b3a6e1-8f4c-9012-3456-789012345fab",
+        page: "login",
+      },
+      {
+        eventType: "userActivity",
+        occurrenceTime: new Date("2025-04-11T13:08:47.955Z"),
+        type: "resize",
+        userUUID: "c2f8d5a9-3e7b-0123-4567-890123456abc",
+        page: "dashboard",
+      },
+      {
+        eventType: "userActivity",
+        occurrenceTime: new Date("2025-02-15T09:41:29.777Z"),
+        type: "click",
+        userUUID: "b8d4f1c7-2e9a-5678-9012-345678901bcd",
+        page: "cart",
+      },
+      {
+        eventType: "userActivity",
+        occurrenceTime: new Date("2025-05-07T17:24:56.183Z"),
+        type: "scroll",
+        userUUID: "a5c9e2f8-1b6d-7890-1234-567890123def",
+        page: "blog",
+      },
+    ];
+    await Promise.all(
+      userEvents.map((e) => post(url("event"), { body: JSON.stringify(e) }))
+    );
+    expect(
+      await post(url("report", "user"), {
+        body: JSON.stringify({
+          userUUID: "f3e7a9b2-4c5d-6789-0123-456789abcdef",
+          timeInterval: {
+            start: "2025-01-13",
+            end: "2025-01-26",
+          },
+        }),
+      })
+    ).toEqual({
+      statusCode: 200,
+      events: {
+        click: { count: 1 },
+        scroll: { count: 2 },
+        form_submit: { count: 1 },
+      },
+    });
+  });
 });

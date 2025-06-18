@@ -3,3 +3,11 @@ export interface UsersReport {
     eventsCount: number;
   };
 }
+
+export interface UserReport {
+  events: {
+    [type: string]: {
+      count: number;
+    };
+  };
+}

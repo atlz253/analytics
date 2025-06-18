@@ -10,6 +10,7 @@ export abstract class Storage {
   abstract last(): Promise<object | undefined>;
 
   abstract readEvents(options: {
+    userUUID?: string;
     timeInterval: TimeInterval;
   }): Promise<Array<UserActivityEvent>>;
 
@@ -45,17 +46,21 @@ class RAMStorage extends Storage {
   }
 
   async readEvents({
+    userUUID,
     timeInterval,
   }: {
+    userUUID?: string;
     timeInterval: TimeInterval;
   }): Promise<Array<UserActivityEvent>> {
     return structuredClone(
-      this.#storage.events.filter(
-        (e) =>
-          new Date(e.occurrenceTime) >= new Date(timeInterval.start) &&
-          (timeInterval.end === undefined ||
-            new Date(e.occurrenceTime) <= new Date(timeInterval.end))
-      )
+      this.#storage.events
+        .filter(
+          (e) =>
+            new Date(e.occurrenceTime) >= new Date(timeInterval.start) &&
+            (timeInterval.end === undefined ||
+              new Date(e.occurrenceTime) <= new Date(timeInterval.end))
+        )
+        .filter((e) => userUUID === undefined || e.userUUID === userUUID)
     );
   }
 
@@ -84,23 +89,23 @@ class MongoStorage extends Storage {
       .findOne({}, { sort: { _id: -1 } }) as Promise<object | undefined>;
   }
 
-  readEvents(options: {
+  readEvents({
+    userUUID,
+    timeInterval,
+  }: {
+    userUUID?: string;
     timeInterval: TimeInterval;
   }): Promise<Array<UserActivityEvent>> {
-    return this.#db
-      .collection("userActivity")
-      .find({
-        occurrenceTime:
-          options.timeInterval.end === undefined
-            ? {
-                $gte: new Date(options.timeInterval.start),
-              }
-            : {
-                $gte: new Date(options.timeInterval.start),
-                $lte: new Date(options.timeInterval.end as string),
-              },
-      })
-      .toArray() as unknown as Promise<Array<UserActivityEvent>>;
+    let result = this.#db.collection("userActivity").find({
+      occurrenceTime: {
+        $gte: new Date(timeInterval.start),
+        ...(timeInterval.end === undefined
+          ? {}
+          : { $lte: new Date(timeInterval.end) }),
+      },
+      ...(userUUID === undefined ? {} : { userUUID }),
+    });
+    return result.toArray() as unknown as Promise<Array<UserActivityEvent>>;
   }
 
   async drop(): Promise<void> {
