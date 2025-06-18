@@ -8,6 +8,11 @@ describe("Создание отчетов", async () => {
   const url = (...parts: string[]) =>
     urlJoin("http://localhost:3000", ...parts);
 
+  const createUserEvents = (events: UserActivityEvent[]) =>
+    Promise.all(
+      events.map((e) => post(url("event"), { body: JSON.stringify(e) }))
+    );
+
   beforeEach(async () => {
     await post(url("event/drop_database"), { body: JSON.stringify({}) });
   });
@@ -17,11 +22,7 @@ describe("Создание отчетов", async () => {
   });
 
   test("Отчет о количестве зарегистрированных событий пользователями должен работать", async () => {
-    await Promise.all(
-      mock
-        .usersReportEvents()
-        .map((e) => post(url("event"), { body: JSON.stringify(e) }))
-    );
+    await createUserEvents(mock.usersReportEvents());
     expect(
       await post(url("report", "users"), {
         body: JSON.stringify({ timeInterval: { start: "2024-09-08" } }),
@@ -56,11 +57,7 @@ describe("Создание отчетов", async () => {
   });
 
   test("Отчет о зарегистрированных событиях активности пользователя должен работать", async () => {
-    await Promise.all(
-      mock
-        .userReportEvents()
-        .map((e) => post(url("event"), { body: JSON.stringify(e) }))
-    );
+    await createUserEvents(mock.userReportEvents());
     expect(
       await post(url("report", "user"), {
         body: JSON.stringify({
@@ -77,6 +74,27 @@ describe("Создание отчетов", async () => {
         click: { count: 1 },
         scroll: { count: 2 },
         form_submit: { count: 1 },
+      },
+    });
+  });
+
+  test("Отчет о зарегистрированных типах событий должен работать", async () => {
+    await createUserEvents(mock.eventTypesReportEvents());
+    expect(
+      await post(url("report", "eventTypes"), {
+        body: JSON.stringify({
+          timeInterval: {
+            start: "2024-03-01",
+            end: "2024-05-01",
+          },
+        }),
+      })
+    ).toEqual({
+      statusCode: 200,
+      events: {
+        click: { count: 1 },
+        form_submit: { count: 1 },
+        page_view: { count: 2 },
       },
     });
   });

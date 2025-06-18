@@ -1,6 +1,7 @@
 import { FastifyPluginCallback } from "fastify";
 import { ImmutableEventEmitter } from "../../../shared/src/ImmutableEventEmitter.js";
 import eventNames from "../../../report/src/events.js";
+import { EventTypesReport, UserReport } from "../../../report/src/types.js";
 
 export default ((fastify, { events }, done) => {
   fastify.route({
@@ -67,31 +68,18 @@ export default ((fastify, { events }, done) => {
       },
     },
     handler: async (request, reply) => {
-      const userData = await events.request(
+      const userData = (await events.request(
         eventNames.createUserReport,
         eventNames.createUserReportAfter,
         request.body
-      );
-      if (typeof userData === "object" && userData !== null) {
-        return { ...userData, statusCode: 200 };
-      } else {
-        return {
-          statusCode: 500,
-          code: "REPORT_ERR_USER_DATA",
-          error: "Неверный формат данных о пользователе",
-          message:
-            "Системе не удалось обработать пришедший формат данных о пользователе",
-        };
-      }
+      )) as UserReport;
+      return { ...userData, statusCode: 200 };
     },
   });
 
   fastify.route({
     method: "POST",
     url: "/eventTypes",
-    handler: async (request, reply) => {
-      return { statusCode: 200 };
-    },
     schema: {
       body: {
         type: "object",
@@ -113,6 +101,14 @@ export default ((fastify, { events }, done) => {
           },
         },
       },
+    },
+    handler: async (request, reply) => {
+      const report = (await events.request(
+        eventNames.createEventTypesReport,
+        eventNames.createEventTypesReportAfter,
+        request.body
+      )) as EventTypesReport;
+      return { ...report, statusCode: 200 };
     },
   });
 

@@ -11,3 +11,11 @@ export interface UserReport {
     };
   };
 }
+
+export interface EventTypesReport {
+  events: {
+    [type: string]: {
+      count: number;
+    };
+  };
+}

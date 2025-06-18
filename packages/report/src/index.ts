@@ -6,7 +6,7 @@ import { TimeInterval } from "../../shared/src/types/timeInterval.js";
 import reportEventNames from "./events.js";
 import eventsEventNames from "../../events/src/events.js";
 import { UserActivityEvent } from "events/src/types.js";
-import { UserReport, UsersReport } from "./types.js";
+import { EventTypesReport, UserReport, UsersReport } from "./types.js";
 
 export class Report {
   #events;
@@ -20,6 +20,10 @@ export class Report {
           this.#createUsersReport.bind(this),
         ],
         [reportEventNames.createUserReport, this.#createUserReport.bind(this)],
+        [
+          reportEventNames.createEventTypesReport,
+          this.#createEventTypesReport.bind(this),
+        ],
       ] as const
     ).map(([e, c]) => events.on(e, c));
   }
@@ -66,6 +70,27 @@ export class Report {
     this.#events.emit(reportEventNames.createUserReportAfter, {
       ...event,
       response: eventsData,
+    });
+  }
+
+  async #createEventTypesReport(
+    event: ImmutableEvent<[{ timeInterval: TimeInterval }]>
+  ) {
+    const [options] = event.args;
+    const events = (await this.#events.request(
+      eventsEventNames.readMultiple,
+      eventsEventNames.readMultipleAfter,
+      options
+    )) as Array<UserActivityEvent>;
+    const report: EventTypesReport = { events: {} };
+    events.forEach((e) =>
+      report.events[e.type] === undefined
+        ? (report.events[e.type] = { count: 1 })
+        : (report.events[e.type].count = report.events[e.type].count + 1)
+    );
+    this.#events.emit(reportEventNames.createEventTypesReportAfter, {
+      ...event,
+      response: report,
     });
   }
 }

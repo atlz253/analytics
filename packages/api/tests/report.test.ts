@@ -191,4 +191,62 @@ describe("/report", async () => {
       },
     });
   });
+
+  test("/eventTypes должен возвращать информацию о зарегистрированных событиях в системе", async () => {
+    await events.request<[Array<UserActivityEvent>]>(
+      eventsEventNames.createMultiple,
+      eventsEventNames.createMultipleAfter,
+      [
+        {
+          eventType: "userActivity",
+          userUUID: "57ee3021-b856-4dc6-8af3-2310ab047256",
+          type: "load",
+          occurrenceTime: new Date("2023-06-17T11:26:21.865Z"),
+          page: "test",
+        },
+        {
+          eventType: "userActivity",
+          userUUID: "32c2b348-6882-4224-92c2-13faf09080bd",
+          type: "load",
+          occurrenceTime: new Date("2023-05-15T11:26:21.865Z"),
+          page: "test",
+        },
+        {
+          eventType: "userActivity",
+          userUUID: "a8636665-83c7-4537-b81c-a6e10d976f56",
+          type: "load",
+          occurrenceTime: new Date("2022-03-19T11:26:21.865Z"),
+          page: "test",
+        },
+        {
+          eventType: "userActivity",
+          userUUID: "a8636665-83c7-4537-b81c-a6e10d976f56",
+          type: "click",
+          occurrenceTime: new Date("2022-03-20T11:27:21.865Z"),
+          page: "test",
+        },
+        {
+          eventType: "userActivity",
+          userUUID: "a8636665-83c7-4537-b81c-a6e10d976f56",
+          type: "click",
+          occurrenceTime: new Date("2022-03-20T11:29:21.865Z"),
+          page: "test",
+        },
+      ]
+    );
+    const response = await post(url("/eventTypes"), {
+      body: JSON.stringify({
+        timeInterval: {
+          start: "2022-03-20",
+        },
+      }),
+    });
+    expect(response).toEqual({
+      statusCode: 200,
+      events: {
+        load: { count: 2 },
+        click: { count: 2 },
+      },
+    });
+  });
 });
