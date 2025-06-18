@@ -32,7 +32,8 @@ class Events {
 
   async #createEvents(event: ImmutableEvent<[Array<UserActivityEvent>]>) {
     const [events] = event.args;
-    await Promise.all(events.map((e) => this.#createEvent({ args: [e] })));
+    const createTime = new Date();
+    await this.#storage.createEvents(events.map((e) => ({ ...e, createTime })));
     this.#events.emit(eventNames.createMultipleAfter, event);
   }
 

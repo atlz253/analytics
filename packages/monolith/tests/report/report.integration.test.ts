@@ -9,9 +9,7 @@ describe("Создание отчетов", async () => {
     urlJoin("http://localhost:3000", ...parts);
 
   const createUserEvents = (events: UserActivityEvent[]) =>
-    Promise.all(
-      events.map((e) => post(url("event"), { body: JSON.stringify(e) }))
-    );
+    post(url("event", "create_multiple"), { body: JSON.stringify(events) });
 
   beforeEach(async () => {
     await post(url("event/drop_database"), { body: JSON.stringify({}) });

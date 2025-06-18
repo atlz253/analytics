@@ -7,6 +7,8 @@ export type StorageType = "RAM" | "mongo";
 export abstract class Storage {
   abstract createEvent(event: UserActivityEvent): Promise<void>;
 
+  abstract createEvents(events: UserActivityEvent[]): Promise<void>;
+
   abstract last(): Promise<object | undefined>;
 
   abstract readEvents(options: {
@@ -35,6 +37,10 @@ class RAMStorage extends Storage {
   }: RAMStorageOptions = {}) {
     super();
     this.#storage = storage;
+  }
+
+  async createEvents(events: UserActivityEvent[]): Promise<void> {
+    await Promise.all(events.map(this.createEvent.bind(this)));
   }
 
   async createEvent(event: UserActivityEvent) {
@@ -81,6 +87,10 @@ class MongoStorage extends Storage {
 
   async createEvent(event: UserActivityEvent) {
     await this.#db.collection("userActivity").insertOne(event);
+  }
+
+  async createEvents(events: UserActivityEvent[]): Promise<void> {
+    await this.#db.collection("userActivity").insertMany(events);
   }
 
   last(): Promise<object | undefined> {
