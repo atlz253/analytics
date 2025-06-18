@@ -3,11 +3,11 @@ import { Ping } from "../../ping/src/index.js";
 import { ImmutableEventEmitter } from "../../shared/src/ImmutableEventEmitter.js";
 import { events as initEvents } from "../../events/src/index.js";
 import { Report } from "../../report/src/index.js";
+import { Archive } from "../../archive/src/index.js";
 
 (async () => {
   const events = new ImmutableEventEmitter();
-  new Ping({ events });
-  new Report({ events });
+  [Ping, Report, Archive].map((M) => new M({ events }));
   await initEvents({ events, storage: { type: "mongo" } });
 
   const api = new API({ events, logger: true, port: 3000 });
