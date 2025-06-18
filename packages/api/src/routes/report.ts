@@ -3,6 +3,7 @@ import { ImmutableEventEmitter } from "../../../shared/src/ImmutableEventEmitter
 import eventNames from "../../../report/src/events.js";
 import { EventTypesReport, UserReport } from "../../../report/src/types.js";
 import { UserActivityEvent } from "events/src/types.js";
+import timeIntervalSchema from "../schemas/timeIntervalSchema.js";
 
 export default ((fastify, { events }, done) => {
   fastify.route({
@@ -13,20 +14,7 @@ export default ((fastify, { events }, done) => {
         type: "object",
         required: ["timeInterval"],
         properties: {
-          timeInterval: {
-            type: "object",
-            required: ["start"],
-            properties: {
-              start: {
-                type: "string",
-                format: "date",
-              },
-              end: {
-                type: "string",
-                format: "date",
-              },
-            },
-          },
+          timeInterval: timeIntervalSchema,
         },
       },
     },
@@ -50,21 +38,9 @@ export default ((fastify, { events }, done) => {
         properties: {
           userUUID: {
             type: "string",
+            format: "uuid",
           },
-          timeInterval: {
-            type: "object",
-            required: ["start"],
-            properties: {
-              start: {
-                type: "string",
-                format: "date",
-              },
-              end: {
-                type: "string",
-                format: "date",
-              },
-            },
-          },
+          timeInterval: timeIntervalSchema,
         },
       },
     },
@@ -86,20 +62,7 @@ export default ((fastify, { events }, done) => {
         type: "object",
         required: ["timeInterval"],
         properties: {
-          timeInterval: {
-            type: "object",
-            required: ["start"],
-            properties: {
-              start: {
-                type: "string",
-                format: "date",
-              },
-              end: {
-                type: "string",
-                format: "date",
-              },
-            },
-          },
+          timeInterval: timeIntervalSchema,
         },
       },
     },
@@ -121,20 +84,7 @@ export default ((fastify, { events }, done) => {
         type: "object",
         required: ["timeInterval"],
         properties: {
-          timeInterval: {
-            type: "object",
-            required: ["start"],
-            properties: {
-              start: {
-                type: "string",
-                format: "date",
-              },
-              end: {
-                type: "string",
-                format: "date",
-              },
-            },
-          },
+          timeInterval: timeIntervalSchema,
         },
       },
     },
