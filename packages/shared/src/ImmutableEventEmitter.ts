@@ -2,7 +2,7 @@ import EventEmitter from "node:events";
 import { randomUUID } from "node:crypto";
 
 export interface ImmutableEvent<T = unknown> {
-  uuid: string;
+  uuid?: string;
   args: T;
 }
 
@@ -12,21 +12,29 @@ export class ImmutableEventEmitter extends EventEmitter {
     responseEventName: string | symbol,
     ...args: T
   ): Promise<unknown> {
-    return new Promise((resolve) => {
-      const uuid = randomUUID();
-      const listener = (event: unknown) => {
-        if (
-          typeof event === "object" &&
-          event !== null &&
-          "uuid" in event &&
-          event.uuid === uuid
-        ) {
-          this.off(requestEventName, listener);
-          resolve("response" in event ? event.response : undefined);
-        }
-      };
-      this.on(responseEventName, listener);
-      this.emit(requestEventName, { uuid, args } as ImmutableEvent);
+    return new Promise((resolve, reject) => {
+      if (this.listeners(requestEventName).length === 0) {
+        reject(
+          new Error(
+            `отсутствуют обработчики событий для ${requestEventName.toString()}`
+          )
+        );
+      } else {
+        const uuid = randomUUID();
+        const listener = (event: unknown) => {
+          if (
+            typeof event === "object" &&
+            event !== null &&
+            "uuid" in event &&
+            event.uuid === uuid
+          ) {
+            this.off(requestEventName, listener);
+            resolve("response" in event ? event.response : undefined);
+          }
+        };
+        this.on(responseEventName, listener);
+        this.emit(requestEventName, { uuid, args } as ImmutableEvent);
+      }
     });
   }
 

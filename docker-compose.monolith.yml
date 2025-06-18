@@ -11,6 +11,8 @@ services:
       - 3000:3000
     networks:
       - analytics-network
+    depends_on:
+      - mongodb
   mongodb:
     image: mongo:8.0.10-noble
     container_name: analytics-mongo
@@ -34,6 +36,8 @@ services:
       ME_CONFIG_BASICAUTH: false
     networks:
       - analytics-network
+    depends_on:
+      - mongodb
 
 networks:
   analytics-network:

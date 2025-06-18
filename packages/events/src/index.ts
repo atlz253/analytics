@@ -25,19 +25,22 @@ class Events {
         [eventNames.create, this.#createEvent.bind(this)],
         [eventNames.createMultiple, this.#createEvents.bind(this)],
         [eventNames.readMultiple, this.#readEvents.bind(this)],
+        [eventNames.dropDatabase, this.#dropDatabase.bind(this)],
       ] as const
     ).forEach(([e, c]) => events.on(e, c));
   }
 
   async #createEvents(event: ImmutableEvent<[Array<UserActivityEvent>]>) {
     const [events] = event.args;
-    await Promise.all(events.map((e) => this.#createEvent(e)));
+    await Promise.all(events.map((e) => this.#createEvent({ args: [e] })));
     this.#events.emit(eventNames.createMultipleAfter, event);
   }
 
-  async #createEvent(event: UserActivityEvent) {
-    event.createTime = new Date().toISOString();
-    await this.#storage.createEvent(event);
+  async #createEvent(event: ImmutableEvent<[UserActivityEvent]>) {
+    const [userEvent] = event.args;
+    userEvent.createTime = new Date();
+    await this.#storage.createEvent(userEvent);
+    this.#events.emit(eventNames.createAfter, event);
   }
 
   async #readEvents(event: ImmutableEvent<[{ timeInterval: TimeInterval }]>) {
@@ -49,6 +52,12 @@ class Events {
     });
   }
 
+  #dropDatabase(event: ImmutableEvent) {
+    this.#storage.drop();
+    this.#events.emit(eventNames.dropDatabaseAfter, event);
+  }
+
+  // TODO: убрать
   last() {
     return this.#storage.last();
   }

@@ -1,6 +1,6 @@
 import { FastifyPluginCallback } from "fastify";
-import EventEmitter from "node:events";
 import eventNames from "../../../events/src/events.js";
+import { ImmutableEventEmitter } from "../../../shared/src/ImmutableEventEmitter.js";
 
 interface UserActivityEvent {
   eventType: "userActivity";
@@ -42,12 +42,25 @@ export default ((fastify, { events }, done) => {
       },
     },
     handler: async (request, reply) => {
-      events.emit(eventNames.create, {
+      await events.request(eventNames.create, eventNames.createAfter, {
         ...request.body,
         occurrenceTime: new Date(request.body.occurrenceTime),
       });
       return { statusCode: 200 };
     },
   });
+
+  // TODO: включать данный endpoint только в режиме отладки
+  fastify.route({
+    method: "POST",
+    url: "/drop_database",
+    handler: async (request, reply) => {
+      await events.request(
+        eventNames.dropDatabase,
+        eventNames.dropDatabaseAfter
+      );
+      return { statusCode: 200 };
+    },
+  });
   done();
-}) as FastifyPluginCallback<{ events: EventEmitter }>;
+}) as FastifyPluginCallback<{ events: ImmutableEventEmitter }>;
