@@ -1,5 +1,5 @@
-import pingEvents from "./events";
-import { ImmutableEventEmitter } from "../../shared/src/ImmutableEventEmitter";
+import pingEvents from "./events.js";
+import { ImmutableEventEmitter } from "../../shared/src/ImmutableEventEmitter.js";
 
 export class Ping {
   constructor({ events }: { events: ImmutableEventEmitter }) {

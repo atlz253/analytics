@@ -4,7 +4,7 @@ services:
   app:
     build:
       context: .
-      dockerfile: Dockerfile.monolith
+      dockerfile: Dockerfile.monolith.release
     container_name: analytics-app
     restart: unless-stopped
     ports:

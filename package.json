@@ -10,7 +10,11 @@
     "test.integration": "vitest --config vitest.integration.config.ts",
     "monolith.start": "npm start --workspace=packages/monolith",
     "monolith.build": "npm run build --workspace=packages/monolith",
-    "monolith.develop": "npm run develop --workspace=packages/monolith"
+    "monolith.develop": "npm run develop --workspace=packages/monolith",
+    "monolith.docker.develop": "docker-compose -f docker-compose.monolith.develop.yml up",
+    "monolith.docker.develop.build": "docker-compose -f docker-compose.monolith.develop.yml build",
+    "monolith.docker.release": "docker-compose -f docker-compose.monolith.release.yml up",
+    "monolith.docker.release.build": "docker-compose -f docker-compose.monolith.release.yml build"
   },
   "author": "Fedor Alekseev",
   "license": "MIT",
