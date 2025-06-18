@@ -1,6 +1,8 @@
 import { FastifyPluginCallback } from "fastify";
 import { ImmutableEventEmitter } from "../../../shared/src/ImmutableEventEmitter.js";
 import timeIntervalSchema from "../schemas/timeIntervalSchema.js";
+import eventNames from "../../../archive/src/events.js";
+import urlJoin from "url-join";
 
 export default ((fastify, { events }, done) => {
   fastify.route({
@@ -15,7 +17,22 @@ export default ((fastify, { events }, done) => {
         },
       },
     },
-    handler: async (request, reply) => {},
+    handler: async (request, reply) => {
+      const response = (await events.request(
+        eventNames.createEventsArchive,
+        eventNames.createEventsArchiveAfter,
+        request.body
+      )) as { archiveUUID: string };
+      return {
+        statusCode: 200,
+        archiveURL: urlJoin(
+          `${request.protocol}://`,
+          request.host,
+          request.url,
+          response.archiveUUID
+        ),
+      };
+    },
   });
 
   done();
