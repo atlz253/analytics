@@ -2,6 +2,7 @@ import { FastifyPluginCallback } from "fastify";
 import { ImmutableEventEmitter } from "../../../shared/src/ImmutableEventEmitter.js";
 import eventNames from "../../../report/src/events.js";
 import { EventTypesReport, UserReport } from "../../../report/src/types.js";
+import { UserActivityEvent } from "events/src/types.js";
 
 export default ((fastify, { events }, done) => {
   fastify.route({
@@ -114,10 +115,7 @@ export default ((fastify, { events }, done) => {
 
   fastify.route({
     method: "POST",
-    url: "/eventAverageTime",
-    handler: async (request, reply) => {
-      return { statusCode: 200 };
-    },
+    url: "/events",
     schema: {
       body: {
         type: "object",
@@ -139,6 +137,14 @@ export default ((fastify, { events }, done) => {
           },
         },
       },
+    },
+    handler: async (request, reply) => {
+      const userEvents = (await events.request(
+        eventNames.createEventsReport,
+        eventNames.createEventsReportAfter,
+        request.body
+      )) as Array<UserActivityEvent>;
+      return { statusCode: 200, events: userEvents };
     },
   });
 

@@ -1,14 +1,16 @@
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
-import { ImmutableEventEmitter } from "../../shared/src/ImmutableEventEmitter.js";
-import { API } from "../src/index.js";
-import { Report } from "../../report/src/index.js";
-import { localhost } from "./utils/address.js";
+import { ImmutableEventEmitter } from "../../../shared/src/ImmutableEventEmitter.js";
+import { API } from "../../src/index.js";
+import { Report } from "../../../report/src/index.js";
+import { localhost } from "../utils/address.js";
 import urlJoin from "url-join";
-import fastify from "./utils/fastify.js";
-import { events as initEvents } from "../../events/src/index.js";
-import { post } from "./utils/fetch.js";
-import eventsEventNames from "../../events/src/events.js";
+import fastify from "../utils/fastify.js";
+import { events as initEvents } from "../../../events/src/index.js";
+import { post } from "../utils/fetch.js";
+import eventsEventNames from "events/src/events.js";
 import { UserActivityEvent } from "events/src/types.js";
+import mock from "./mock.js";
+import { omit } from "ramda";
 
 describe("/report", async () => {
   let events = new ImmutableEventEmitter();
@@ -23,7 +25,7 @@ describe("/report", async () => {
     url("users"),
     url("user"),
     url("eventTypes"),
-    url("eventAverageTime"),
+    url("events"),
   ];
 
   beforeEach(async () => {
@@ -247,6 +249,86 @@ describe("/report", async () => {
         load: { count: 2 },
         click: { count: 2 },
       },
+    });
+  });
+
+  test("/events должен отправлять события за определенный промежуток времени", async () => {
+    await events.request<[Array<UserActivityEvent>]>(
+      eventsEventNames.createMultiple,
+      eventsEventNames.createMultipleAfter,
+      mock.eventsReportEvents()
+    );
+    const response = await post(url("/events"), {
+      body: JSON.stringify({
+        timeInterval: {
+          start: "2024-03-01",
+          end: "2024-07-01",
+        },
+      }),
+    });
+    response.events = response.events.map((e: { createTime: string }) =>
+      omit(["createTime"], e)
+    );
+    expect(response).toEqual({
+      statusCode: 200,
+      events: [
+        {
+          eventType: "userActivity",
+          occurrenceTime: "2024-03-12T11:35:29.567Z",
+          type: "click",
+          userUUID: "c3d4e5f6-7890-1234-5678-901234567cde",
+          page: "product-details",
+        },
+        {
+          eventType: "userActivity",
+          occurrenceTime: "2024-03-25T08:51:47.890Z",
+          type: "form_submit",
+          userUUID: "b2c3d4e5-6f70-8901-2345-678901234bcd",
+          page: "contact",
+        },
+        {
+          eventType: "userActivity",
+          occurrenceTime: "2024-04-03T18:26:15.123Z",
+          type: "page_view",
+          userUUID: "d4e5f6a7-8901-2345-6789-012345678def",
+          page: "about",
+        },
+        {
+          eventType: "userActivity",
+          occurrenceTime: "2024-04-18T13:07:52.456Z",
+          type: "page_view",
+          userUUID: "a1b2c3d4-5e6f-7890-1234-567890123abc",
+          page: "dashboard",
+        },
+        {
+          eventType: "userActivity",
+          occurrenceTime: "2024-05-07T10:44:38.789Z",
+          type: "key_press",
+          userUUID: "c3d4e5f6-7890-1234-5678-901234567cde",
+          page: "search",
+        },
+        {
+          eventType: "userActivity",
+          occurrenceTime: "2024-05-22T15:19:26.012Z",
+          type: "scroll",
+          userUUID: "b2c3d4e5-6f70-8901-2345-678901234bcd",
+          page: "blog",
+        },
+        {
+          eventType: "userActivity",
+          occurrenceTime: "2024-06-14T07:33:41.345Z",
+          type: "focus",
+          userUUID: "e5f6a7b8-9012-3456-7890-123456789efa",
+          page: "login",
+        },
+        {
+          eventType: "userActivity",
+          occurrenceTime: "2024-06-14T07:35:09.678Z",
+          type: "blur",
+          userUUID: "e5f6a7b8-9012-3456-7890-123456789efa",
+          page: "login",
+        },
+      ],
     });
   });
 });

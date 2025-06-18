@@ -3,6 +3,7 @@ import { post } from "../../../api/tests/utils/fetch.js";
 import urlJoin from "url-join";
 import { UserActivityEvent } from "events/src/types.js";
 import mock from "./mock.js";
+import { omit } from "ramda";
 
 describe("Создание отчетов", async () => {
   const url = (...parts: string[]) =>
@@ -94,6 +95,82 @@ describe("Создание отчетов", async () => {
         form_submit: { count: 1 },
         page_view: { count: 2 },
       },
+    });
+  });
+
+  test("Отчет о зарегистрированных событиях должен работать", async () => {
+    await createUserEvents(mock.eventTypesReportEvents());
+    const response = await post(url("report", "events"), {
+      body: JSON.stringify({
+        timeInterval: {
+          start: "2024-03-01",
+          end: "2024-07-01",
+        },
+      }),
+    });
+    response.events = response.events.map(
+      (e: { createTime: string; _id: object }) => omit(["createTime", "_id"], e)
+    );
+    expect(response).toEqual({
+      statusCode: 200,
+      events: [
+        {
+          eventType: "userActivity",
+          occurrenceTime: "2024-03-12T11:35:29.567Z",
+          type: "click",
+          userUUID: "c3d4e5f6-7890-1234-5678-901234567cde",
+          page: "product-details",
+        },
+        {
+          eventType: "userActivity",
+          occurrenceTime: "2024-03-25T08:51:47.890Z",
+          type: "form_submit",
+          userUUID: "b2c3d4e5-6f70-8901-2345-678901234bcd",
+          page: "contact",
+        },
+        {
+          eventType: "userActivity",
+          occurrenceTime: "2024-04-03T18:26:15.123Z",
+          type: "page_view",
+          userUUID: "d4e5f6a7-8901-2345-6789-012345678def",
+          page: "about",
+        },
+        {
+          eventType: "userActivity",
+          occurrenceTime: "2024-04-18T13:07:52.456Z",
+          type: "page_view",
+          userUUID: "a1b2c3d4-5e6f-7890-1234-567890123abc",
+          page: "dashboard",
+        },
+        {
+          eventType: "userActivity",
+          occurrenceTime: "2024-05-07T10:44:38.789Z",
+          type: "key_press",
+          userUUID: "c3d4e5f6-7890-1234-5678-901234567cde",
+          page: "search",
+        },
+        {
+          eventType: "userActivity",
+          occurrenceTime: "2024-05-22T15:19:26.012Z",
+          type: "scroll",
+          userUUID: "b2c3d4e5-6f70-8901-2345-678901234bcd",
+          page: "blog",
+        },
+        {
+          eventType: "userActivity",
+          occurrenceTime: "2024-06-14T07:33:41.345Z",
+          type: "focus",
+          userUUID: "e5f6a7b8-9012-3456-7890-123456789efa",
+          page: "login",
+        },
+        {
+          eventType: "userActivity",
+          occurrenceTime: "2024-06-14T07:35:09.678Z",
+          type: "blur",
+          userUUID: "e5f6a7b8-9012-3456-7890-123456789efa",
+          page: "login",
+        },
+      ],
     });
   });
 });

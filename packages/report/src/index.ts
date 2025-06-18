@@ -24,6 +24,10 @@ export class Report {
           reportEventNames.createEventTypesReport,
           this.#createEventTypesReport.bind(this),
         ],
+        [
+          reportEventNames.createEventsReport,
+          this.#createEventsReport.bind(this),
+        ],
       ] as const
     ).map(([e, c]) => events.on(e, c));
   }
@@ -91,6 +95,21 @@ export class Report {
     this.#events.emit(reportEventNames.createEventTypesReportAfter, {
       ...event,
       response: report,
+    });
+  }
+
+  async #createEventsReport(
+    event: ImmutableEvent<[{ timeInterval: TimeInterval }]>
+  ) {
+    const [options] = event.args;
+    const events = (await this.#events.request(
+      eventsEventNames.readMultiple,
+      eventsEventNames.readMultipleAfter,
+      options
+    )) as Array<UserActivityEvent>;
+    this.#events.emit(reportEventNames.createEventsReportAfter, {
+      ...event,
+      response: events,
     });
   }
 }

@@ -5,4 +5,6 @@ export default {
   createUserReportAfter: "report.createUserReport.after",
   createEventTypesReport: "report.createEventTypeReport",
   createEventTypesReportAfter: "report.createEventTypeReport.after",
+  createEventsReport: "report.createEventsReport",
+  createEventsReportAfter: "report.createEventsReport.after",
 };
