@@ -1,6 +1,5 @@
+import { AbstractEvents } from "../../../events/src/index.js";
 import { FastifyPluginCallback, FastifySchema } from "fastify";
-import eventNames from "../../../events/src/events.js";
-import { ImmutableEventEmitter } from "../../../shared/src/ImmutableEventEmitter.js";
 
 interface UserActivityEvent {
   eventType: "userActivity";
@@ -44,7 +43,7 @@ export default ((fastify, { events }, done) => {
       body: userActivityEventSchema,
     },
     handler: async (request, reply) => {
-      await events.request(eventNames.create, eventNames.createAfter, {
+      await events.createEvent({
         ...request.body,
         occurrenceTime: new Date(request.body.occurrenceTime),
       });
@@ -62,9 +61,7 @@ export default ((fastify, { events }, done) => {
       },
     },
     handler: async (request, reply) => {
-      await events.request(
-        eventNames.createMultiple,
-        eventNames.createMultipleAfter,
+      await events.createEvents(
         request.body.map((e) => ({
           ...e,
           occurrenceTime: new Date(e.occurrenceTime),
@@ -79,12 +76,9 @@ export default ((fastify, { events }, done) => {
     method: "POST",
     url: "/drop_database",
     handler: async (request, reply) => {
-      await events.request(
-        eventNames.dropDatabase,
-        eventNames.dropDatabaseAfter
-      );
+      await events.dropDatabase();
       return { statusCode: 200 };
     },
   });
   done();
-}) as FastifyPluginCallback<{ events: ImmutableEventEmitter }>;
+}) as FastifyPluginCallback<{ events: AbstractEvents }>;

@@ -1,23 +1,30 @@
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { API } from "../src/index.js";
 import { localhost } from "./utils/address.js";
-import { events as initEvents } from "../../events/src/index.js";
-import { ImmutableEventEmitter } from "../../shared/src/ImmutableEventEmitter.js";
+import { initEvents as initEvents } from "../../events/src/index.js";
 import { omit } from "ramda";
 import fastify from "./utils/fastify.js";
 import { post } from "./utils/fetch.js";
+import { ReportMock } from "../../report/src/index.js";
+import { ArchiveMock } from "../../archive/src/index.js";
 
 describe("/event", async () => {
-  let events = new ImmutableEventEmitter();
-  let api = new API({ events });
-  let eventsModule = await initEvents({ events, storage: { type: "RAM" } });
+  let events = await initEvents({ storage: { type: "RAM" } });
+  let api = new API({
+    events,
+    report: new ReportMock(),
+    archive: new ArchiveMock(),
+  });
 
   const url = () => localhost(api.port) + "/event";
 
   beforeEach(async () => {
-    events = new ImmutableEventEmitter();
-    api = new API({ events });
-    eventsModule = await initEvents({ events, storage: { type: "RAM" } });
+    events = await initEvents({ storage: { type: "RAM" } });
+    api = new API({
+      events,
+      report: new ReportMock(),
+      archive: new ArchiveMock(),
+    });
     await api.listen();
   });
 
@@ -48,7 +55,7 @@ describe("/event", async () => {
       body: JSON.stringify(event),
     });
     expect(await response.json()).toEqual({ statusCode: 200 });
-    const lastEvent = await eventsModule.last();
+    const lastEvent = await events.last();
     expect(typeof lastEvent).toBe("object");
     if (lastEvent !== undefined && "createTime" in lastEvent)
       delete lastEvent.createTime;
@@ -96,7 +103,7 @@ describe("/event", async () => {
     ).toEqual({
       statusCode: 200,
     });
-    const last = await eventsModule.last();
+    const last = await events.last();
     if (typeof last === "object" && "createTime" in last)
       delete last.createTime;
     expect(last).toEqual({

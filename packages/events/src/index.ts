@@ -1,75 +1,81 @@
-import eventNames from "./events.js";
-import {
-  ImmutableEvent,
-  ImmutableEventEmitter,
-} from "../../shared/src/ImmutableEventEmitter.js";
 import { storage as getStorage, Storage, StorageOptions } from "./storage.js";
 import { UserActivityEvent } from "./types.js";
 import { TimeInterval } from "../../shared/src/types/timeInterval.js";
 
-class Events {
-  #events;
-  #storage;
+export abstract class AbstractEvents {
+  abstract createEvents(events: Array<UserActivityEvent>): Promise<void>;
 
-  constructor({
-    events,
-    storage,
-  }: {
-    events: ImmutableEventEmitter;
-    storage: Storage;
-  }) {
-    this.#events = events;
-    this.#storage = storage;
-    (
-      [
-        [eventNames.create, this.#createEvent.bind(this)],
-        [eventNames.createMultiple, this.#createEvents.bind(this)],
-        [eventNames.readMultiple, this.#readEvents.bind(this)],
-        [eventNames.dropDatabase, this.#dropDatabase.bind(this)],
-      ] as const
-    ).forEach(([e, c]) => events.on(e, c));
-  }
+  abstract createEvent(event: UserActivityEvent): Promise<void>;
 
-  async #createEvents(event: ImmutableEvent<[Array<UserActivityEvent>]>) {
-    const [events] = event.args;
-    const createTime = new Date();
-    await this.#storage.createEvents(events.map((e) => ({ ...e, createTime })));
-    this.#events.emit(eventNames.createMultipleAfter, event);
-  }
+  abstract readEvents(options: {
+    timeInterval: TimeInterval;
+  }): Promise<Array<UserActivityEvent>>;
 
-  async #createEvent(event: ImmutableEvent<[UserActivityEvent]>) {
-    const [userEvent] = event.args;
-    userEvent.createTime = new Date();
-    await this.#storage.createEvent(userEvent);
-    this.#events.emit(eventNames.createAfter, event);
-  }
-
-  async #readEvents(event: ImmutableEvent<[{ timeInterval: TimeInterval }]>) {
-    const [options] = event.args;
-    const events = await this.#storage.readEvents(options);
-    this.#events.emit(eventNames.readMultipleAfter, {
-      ...event,
-      response: events,
-    });
-  }
-
-  #dropDatabase(event: ImmutableEvent) {
-    this.#storage.drop();
-    this.#events.emit(eventNames.dropDatabaseAfter, event);
-  }
+  abstract dropDatabase(): Promise<void>;
 
   // TODO: убрать
-  last() {
-    return this.#storage.last();
+  abstract last(): Promise<UserActivityEvent | undefined>;
+}
+
+export class EventsMock extends AbstractEvents {
+  createEvents(events: Array<UserActivityEvent>): Promise<void> {
+    throw new Error("Mock");
+  }
+
+  createEvent(event: UserActivityEvent): Promise<void> {
+    throw new Error("Mock");
+  }
+
+  readEvents(options: {
+    timeInterval: TimeInterval;
+  }): Promise<Array<UserActivityEvent>> {
+    throw new Error("Mock");
+  }
+
+  dropDatabase(): Promise<void> {
+    throw new Error("Mock");
+  }
+
+  last(): Promise<UserActivityEvent | undefined> {
+    throw new Error("Mock");
   }
 }
 
-export async function events({
-  events,
-  storage,
-}: {
-  events: ImmutableEventEmitter;
-  storage: StorageOptions;
-}) {
-  return new Events({ events, storage: await getStorage(storage) });
+class Events extends AbstractEvents {
+  #storage;
+
+  constructor({ storage }: { storage: Storage }) {
+    super();
+    this.#storage = storage;
+  }
+
+  async createEvents(events: Array<UserActivityEvent>) {
+    const createTime = new Date();
+    await this.#storage.createEvents(events.map((e) => ({ ...e, createTime })));
+  }
+
+  async createEvent(event: UserActivityEvent) {
+    event.createTime = new Date();
+    await this.#storage.createEvent(event);
+  }
+
+  async readEvents(options: { timeInterval: TimeInterval }) {
+    return await this.#storage.readEvents(options);
+  }
+
+  async dropDatabase() {
+    await this.#storage.drop();
+  }
+
+  // TODO: убрать
+  /**
+   * @deprecated
+   */
+  last() {
+    return this.#storage.last() as Promise<UserActivityEvent | undefined>;
+  }
+}
+
+export async function initEvents({ storage }: { storage: StorageOptions }) {
+  return new Events({ storage: await getStorage(storage) });
 }

@@ -1,11 +1,7 @@
-import {
-  ImmutableEvent,
-  ImmutableEventEmitter,
-} from "../../shared/src/ImmutableEventEmitter.js";
 import { TimeInterval } from "../../shared/src/types/timeInterval.js";
-import eventsEventNames from "../../events/src/events.js";
 import { UserActivityEvent } from "events/src/types.js";
 import { EventTypesReport, UserReport, UsersReport } from "./types.js";
+import { AbstractEvents } from "../../events/src/index.js";
 
 export abstract class AbstractReport {
   abstract createUsersReport(event: {
@@ -56,17 +52,13 @@ export class ReportMock extends AbstractReport {
 export class Report extends AbstractReport {
   #events;
 
-  constructor({ events }: { events: ImmutableEventEmitter }) {
+  constructor({ events }: { events: AbstractEvents }) {
     super();
     this.#events = events;
   }
 
   async createUsersReport(options: { timeInterval: TimeInterval }) {
-    const events = (await this.#events.request(
-      eventsEventNames.readMultiple,
-      eventsEventNames.readMultipleAfter,
-      options
-    )) as Array<UserActivityEvent>;
+    const events = await this.#events.readEvents(options);
     const usersUUID = new Set(events.map((e) => e.userUUID));
     const result: UsersReport = {};
     usersUUID.forEach(
@@ -82,11 +74,7 @@ export class Report extends AbstractReport {
     userUUID: string;
     timeInterval: TimeInterval;
   }) {
-    const events = (await this.#events.request(
-      eventsEventNames.readMultiple,
-      eventsEventNames.readMultipleAfter,
-      options
-    )) as Array<UserActivityEvent>;
+    const events = await this.#events.readEvents(options);
     const eventsData: UserReport = { events: {} };
     events.forEach((e) =>
       e.type in eventsData.events
@@ -98,11 +86,7 @@ export class Report extends AbstractReport {
   }
 
   async createEventTypesReport(options: { timeInterval: TimeInterval }) {
-    const events = (await this.#events.request(
-      eventsEventNames.readMultiple,
-      eventsEventNames.readMultipleAfter,
-      options
-    )) as Array<UserActivityEvent>;
+    const events = await this.#events.readEvents(options);
     const report: EventTypesReport = { events: {} };
     events.forEach((e) =>
       report.events[e.type] === undefined
@@ -113,11 +97,7 @@ export class Report extends AbstractReport {
   }
 
   async createEventsReport(options: { timeInterval: TimeInterval }) {
-    const events = (await this.#events.request(
-      eventsEventNames.readMultiple,
-      eventsEventNames.readMultipleAfter,
-      options
-    )) as Array<UserActivityEvent>;
+    const events = await this.#events.readEvents(options);
     return events;
   }
 }

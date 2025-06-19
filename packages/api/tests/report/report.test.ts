@@ -1,23 +1,20 @@
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
-import { ImmutableEventEmitter } from "../../../shared/src/ImmutableEventEmitter.js";
 import { API } from "../../src/index.js";
 import { Report } from "../../../report/src/index.js";
 import { localhost } from "../utils/address.js";
 import urlJoin from "url-join";
 import fastify from "../utils/fastify.js";
-import { events as initEvents } from "../../../events/src/index.js";
+import { initEvents as initEvents } from "../../../events/src/index.js";
 import { post } from "../utils/fetch.js";
-import eventsEventNames from "events/src/events.js";
 import { UserActivityEvent } from "events/src/types.js";
 import mock from "./mock.js";
 import { omit } from "ramda";
 import { ArchiveMock } from "../../../archive/src/index.js";
 
 describe("/report", async () => {
-  let events = new ImmutableEventEmitter();
+  let events = await initEvents({ storage: { type: "RAM" } });
   let report = new Report({ events });
   let api = new API({ events, report, archive: new ArchiveMock() });
-  let eventsModule = await initEvents({ events, storage: { type: "RAM" } });
 
   const url = (...parts: string[]) =>
     urlJoin(localhost(api.port), "/report", ...parts);
@@ -30,10 +27,9 @@ describe("/report", async () => {
   ];
 
   beforeEach(async () => {
-    events = new ImmutableEventEmitter();
+    events = await initEvents({ storage: { type: "RAM" } });
     report = new Report({ events });
     api = new API({ events, report, archive: new ArchiveMock() });
-    eventsModule = await initEvents({ events, storage: { type: "RAM" } });
     await api.listen();
   });
 
@@ -78,47 +74,43 @@ describe("/report", async () => {
   });
 
   test("/users возвращает список пользователей с зарегистрированными событиями", async () => {
-    await events.request<[Array<UserActivityEvent>]>(
-      eventsEventNames.createMultiple,
-      eventsEventNames.createMultipleAfter,
-      [
-        {
-          eventType: "userActivity",
-          userUUID: "57ee3021-b856-4dc6-8af3-2310ab047256",
-          type: "load",
-          occurrenceTime: new Date("2025-06-17T11:26:21.865Z"),
-          page: "test",
-        },
-        {
-          eventType: "userActivity",
-          userUUID: "32c2b348-6882-4224-92c2-13faf09080bd",
-          type: "load",
-          occurrenceTime: new Date("2025-05-15T11:26:21.865Z"),
-          page: "test",
-        },
-        {
-          eventType: "userActivity",
-          userUUID: "a8636665-83c7-4537-b81c-a6e10d976f56",
-          type: "load",
-          occurrenceTime: new Date("2024-03-20T11:26:21.865Z"),
-          page: "test",
-        },
-        {
-          eventType: "userActivity",
-          userUUID: "a8636665-83c7-4537-b81c-a6e10d976f56",
-          type: "click",
-          occurrenceTime: new Date("2024-03-20T11:27:21.865Z"),
-          page: "test",
-        },
-        {
-          eventType: "userActivity",
-          userUUID: "a8636665-83c7-4537-b81c-a6e10d976f56",
-          type: "click",
-          occurrenceTime: new Date("2024-03-20T11:29:21.865Z"),
-          page: "test",
-        },
-      ]
-    );
+    await events.createEvents([
+      {
+        eventType: "userActivity",
+        userUUID: "57ee3021-b856-4dc6-8af3-2310ab047256",
+        type: "load",
+        occurrenceTime: new Date("2025-06-17T11:26:21.865Z"),
+        page: "test",
+      },
+      {
+        eventType: "userActivity",
+        userUUID: "32c2b348-6882-4224-92c2-13faf09080bd",
+        type: "load",
+        occurrenceTime: new Date("2025-05-15T11:26:21.865Z"),
+        page: "test",
+      },
+      {
+        eventType: "userActivity",
+        userUUID: "a8636665-83c7-4537-b81c-a6e10d976f56",
+        type: "load",
+        occurrenceTime: new Date("2024-03-20T11:26:21.865Z"),
+        page: "test",
+      },
+      {
+        eventType: "userActivity",
+        userUUID: "a8636665-83c7-4537-b81c-a6e10d976f56",
+        type: "click",
+        occurrenceTime: new Date("2024-03-20T11:27:21.865Z"),
+        page: "test",
+      },
+      {
+        eventType: "userActivity",
+        userUUID: "a8636665-83c7-4537-b81c-a6e10d976f56",
+        type: "click",
+        occurrenceTime: new Date("2024-03-20T11:29:21.865Z"),
+        page: "test",
+      },
+    ]);
     const response = await post(url("/users"), {
       body: JSON.stringify({
         timeInterval: { start: "2024-03-20" },
@@ -135,47 +127,43 @@ describe("/report", async () => {
   });
 
   test("/user должен возвращать данные о зарегистрированных событиях активности пользователя", async () => {
-    await events.request<[Array<UserActivityEvent>]>(
-      eventsEventNames.createMultiple,
-      eventsEventNames.createMultipleAfter,
-      [
-        {
-          eventType: "userActivity",
-          userUUID: "57ee3021-b856-4dc6-8af3-2310ab047256",
-          type: "load",
-          occurrenceTime: new Date("2023-06-17T11:26:21.865Z"),
-          page: "test",
-        },
-        {
-          eventType: "userActivity",
-          userUUID: "32c2b348-6882-4224-92c2-13faf09080bd",
-          type: "load",
-          occurrenceTime: new Date("2023-05-15T11:26:21.865Z"),
-          page: "test",
-        },
-        {
-          eventType: "userActivity",
-          userUUID: "a8636665-83c7-4537-b81c-a6e10d976f56",
-          type: "load",
-          occurrenceTime: new Date("2023-03-20T11:26:21.865Z"),
-          page: "test",
-        },
-        {
-          eventType: "userActivity",
-          userUUID: "a8636665-83c7-4537-b81c-a6e10d976f56",
-          type: "click",
-          occurrenceTime: new Date("2022-03-20T11:27:21.865Z"),
-          page: "test",
-        },
-        {
-          eventType: "userActivity",
-          userUUID: "a8636665-83c7-4537-b81c-a6e10d976f56",
-          type: "click",
-          occurrenceTime: new Date("2022-03-20T11:29:21.865Z"),
-          page: "test",
-        },
-      ]
-    );
+    await events.createEvents([
+      {
+        eventType: "userActivity",
+        userUUID: "57ee3021-b856-4dc6-8af3-2310ab047256",
+        type: "load",
+        occurrenceTime: new Date("2023-06-17T11:26:21.865Z"),
+        page: "test",
+      },
+      {
+        eventType: "userActivity",
+        userUUID: "32c2b348-6882-4224-92c2-13faf09080bd",
+        type: "load",
+        occurrenceTime: new Date("2023-05-15T11:26:21.865Z"),
+        page: "test",
+      },
+      {
+        eventType: "userActivity",
+        userUUID: "a8636665-83c7-4537-b81c-a6e10d976f56",
+        type: "load",
+        occurrenceTime: new Date("2023-03-20T11:26:21.865Z"),
+        page: "test",
+      },
+      {
+        eventType: "userActivity",
+        userUUID: "a8636665-83c7-4537-b81c-a6e10d976f56",
+        type: "click",
+        occurrenceTime: new Date("2022-03-20T11:27:21.865Z"),
+        page: "test",
+      },
+      {
+        eventType: "userActivity",
+        userUUID: "a8636665-83c7-4537-b81c-a6e10d976f56",
+        type: "click",
+        occurrenceTime: new Date("2022-03-20T11:29:21.865Z"),
+        page: "test",
+      },
+    ]);
     const response = await post(url("/user"), {
       body: JSON.stringify({
         userUUID: "a8636665-83c7-4537-b81c-a6e10d976f56",
@@ -196,47 +184,43 @@ describe("/report", async () => {
   });
 
   test("/eventTypes должен возвращать информацию о зарегистрированных событиях в системе", async () => {
-    await events.request<[Array<UserActivityEvent>]>(
-      eventsEventNames.createMultiple,
-      eventsEventNames.createMultipleAfter,
-      [
-        {
-          eventType: "userActivity",
-          userUUID: "57ee3021-b856-4dc6-8af3-2310ab047256",
-          type: "load",
-          occurrenceTime: new Date("2023-06-17T11:26:21.865Z"),
-          page: "test",
-        },
-        {
-          eventType: "userActivity",
-          userUUID: "32c2b348-6882-4224-92c2-13faf09080bd",
-          type: "load",
-          occurrenceTime: new Date("2023-05-15T11:26:21.865Z"),
-          page: "test",
-        },
-        {
-          eventType: "userActivity",
-          userUUID: "a8636665-83c7-4537-b81c-a6e10d976f56",
-          type: "load",
-          occurrenceTime: new Date("2022-03-19T11:26:21.865Z"),
-          page: "test",
-        },
-        {
-          eventType: "userActivity",
-          userUUID: "a8636665-83c7-4537-b81c-a6e10d976f56",
-          type: "click",
-          occurrenceTime: new Date("2022-03-20T11:27:21.865Z"),
-          page: "test",
-        },
-        {
-          eventType: "userActivity",
-          userUUID: "a8636665-83c7-4537-b81c-a6e10d976f56",
-          type: "click",
-          occurrenceTime: new Date("2022-03-20T11:29:21.865Z"),
-          page: "test",
-        },
-      ]
-    );
+    await events.createEvents([
+      {
+        eventType: "userActivity",
+        userUUID: "57ee3021-b856-4dc6-8af3-2310ab047256",
+        type: "load",
+        occurrenceTime: new Date("2023-06-17T11:26:21.865Z"),
+        page: "test",
+      },
+      {
+        eventType: "userActivity",
+        userUUID: "32c2b348-6882-4224-92c2-13faf09080bd",
+        type: "load",
+        occurrenceTime: new Date("2023-05-15T11:26:21.865Z"),
+        page: "test",
+      },
+      {
+        eventType: "userActivity",
+        userUUID: "a8636665-83c7-4537-b81c-a6e10d976f56",
+        type: "load",
+        occurrenceTime: new Date("2022-03-19T11:26:21.865Z"),
+        page: "test",
+      },
+      {
+        eventType: "userActivity",
+        userUUID: "a8636665-83c7-4537-b81c-a6e10d976f56",
+        type: "click",
+        occurrenceTime: new Date("2022-03-20T11:27:21.865Z"),
+        page: "test",
+      },
+      {
+        eventType: "userActivity",
+        userUUID: "a8636665-83c7-4537-b81c-a6e10d976f56",
+        type: "click",
+        occurrenceTime: new Date("2022-03-20T11:29:21.865Z"),
+        page: "test",
+      },
+    ]);
     const response = await post(url("/eventTypes"), {
       body: JSON.stringify({
         timeInterval: {
@@ -254,11 +238,7 @@ describe("/report", async () => {
   });
 
   test("/events должен отправлять события за определенный промежуток времени", async () => {
-    await events.request<[Array<UserActivityEvent>]>(
-      eventsEventNames.createMultiple,
-      eventsEventNames.createMultipleAfter,
-      mock.eventsReportEvents()
-    );
+    await events.createEvents(mock.eventsReportEvents());
     const response = await post(url("/events"), {
       body: JSON.stringify({
         timeInterval: {

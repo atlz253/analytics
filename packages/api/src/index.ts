@@ -2,11 +2,11 @@ import Fastify from "fastify";
 import pingRoute from "./routes/ping.js";
 import eventRoute from "./routes/event.js";
 import reportRoute from "./routes/report.js";
-import { ImmutableEventEmitter } from "../../shared/src/ImmutableEventEmitter.js";
 import archiveRoute from "./routes/archive.js";
 import { AbstractArchive } from "../../archive/src/index.js";
 import { Ping } from "../../ping/src/index.js";
 import { AbstractReport } from "../../report/src/index.js";
+import { AbstractEvents } from "../../events/src/index.js";
 
 export class API {
   #port;
@@ -29,7 +29,7 @@ export class API {
     ping = new Ping(),
     port,
   }: {
-    events: ImmutableEventEmitter;
+    events: AbstractEvents;
     archive: AbstractArchive;
     report: AbstractReport;
     ping?: Ping;
@@ -38,9 +38,7 @@ export class API {
   }) {
     this.#port = port;
     this.#fastify = Fastify({ logger });
-    ([[eventRoute, { events, prefix: "/event" }]] as const).forEach(
-      ([plugin, opts]) => this.#fastify.register(plugin, opts)
-    );
+    this.#fastify.register(eventRoute, { events, prefix: "/event" });
     this.#fastify.register(reportRoute, { report, prefix: "/report" });
     this.#fastify.register(pingRoute, { ping, prefix: "/ping" });
     this.#fastify.register(archiveRoute, {

@@ -1,16 +1,11 @@
-import {
-  ImmutableEvent,
-  ImmutableEventEmitter,
-} from "../../shared/src/ImmutableEventEmitter.js";
 import { TimeInterval } from "../../shared/src/types/timeInterval.js";
-import eventEventNames from "../../events/src/events.js";
 import { randomUUID } from "node:crypto";
 import { Storage } from "./storage.js";
 import { unlink } from "node:fs/promises";
 import { zipJSON } from "./archive.js";
-import { UserActivityEvent } from "events/src/types.js";
 import { storage as initStorage } from "./storage.js";
 import { Readable } from "node:stream";
+import { AbstractEvents } from "../../events/src/index.js";
 
 export abstract class AbstractArchive {
   abstract createEventsArchive(options: {
@@ -44,7 +39,7 @@ export class Archive extends AbstractArchive {
     events,
     storage,
   }: {
-    events: ImmutableEventEmitter;
+    events: AbstractEvents;
     storage: Storage;
   }) {
     super();
@@ -53,11 +48,7 @@ export class Archive extends AbstractArchive {
   }
 
   async createEventsArchive(options: { timeInterval: TimeInterval }) {
-    const userEvents = (await this.#events.request(
-      eventEventNames.readMultiple,
-      eventEventNames.readMultipleAfter,
-      options
-    )) as Array<UserActivityEvent>;
+    const userEvents = await this.#events.readEvents(options);
     const path = await zipJSON({
       "events.json": userEvents,
     });
@@ -72,11 +63,11 @@ export class Archive extends AbstractArchive {
   }
 }
 
-export async function archive({
+export async function initArchive({
   events,
   storage,
 }: {
-  events: ImmutableEventEmitter;
+  events: AbstractEvents;
   storage: { type: "RAM" | "mongo" };
 }) {
   return new Archive({
