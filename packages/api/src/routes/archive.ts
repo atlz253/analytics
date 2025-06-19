@@ -3,10 +3,10 @@ import { ImmutableEventEmitter } from "../../../shared/src/ImmutableEventEmitter
 import timeIntervalSchema from "../schemas/timeIntervalSchema.js";
 import eventNames from "../../../archive/src/events.js";
 import urlJoin from "url-join";
-import { createReadStream } from "node:fs";
-import { basename } from "node:path";
+import { ReadStream } from "node:fs";
+import { StreamRegistry } from "../../../shared/src/StreamRegistry.js";
 
-export default ((fastify, { events }, done) => {
+export default ((fastify, { events, readStreams }, done) => {
   fastify.route({
     method: "POST",
     url: "/events",
@@ -58,10 +58,15 @@ export default ((fastify, { events }, done) => {
         eventNames.readEventsArchive,
         eventNames.readEventsArchiveAfter,
         { archiveUUID }
-      )) as { found: false } | { found: true; path: string };
+      )) as { found: false } | { found: true; streamUUID: string };
       if (response.found) {
-        try {
-          const stream = createReadStream(response.path);
+        const stream = readStreams.get(response.streamUUID);
+        if (stream === undefined) {
+          return {
+            statusCode: 500,
+            error: "File stream no found",
+          };
+        } else {
           stream.on("error", (error) => {
             reply.send({
               statusCode: 500,
@@ -72,14 +77,9 @@ export default ((fastify, { events }, done) => {
             .type("application/zip")
             .header(
               "Content-Disposition",
-              `attachment; filename="${basename(response.path)}"`
+              `attachment; filename="${archiveUUID}.zip"`
             )
             .send(stream);
-        } catch (error) {
-          return {
-            statusCode: 500,
-            error: "Error accessing file'",
-          };
         }
       } else {
         return { statusCode: 404, error: "File not found" };
@@ -88,4 +88,7 @@ export default ((fastify, { events }, done) => {
   });
 
   done();
-}) as FastifyPluginCallback<{ events: ImmutableEventEmitter }>;
+}) as FastifyPluginCallback<{
+  events: ImmutableEventEmitter;
+  readStreams: StreamRegistry<ReadStream>;
+}>;

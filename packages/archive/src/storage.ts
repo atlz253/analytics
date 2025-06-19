@@ -1,8 +1,17 @@
 import { tmpdir } from "node:os";
 import { basename, join } from "node:path";
 import { copyFile, mkdir } from "node:fs/promises";
+import { createReadStream, ReadStream } from "node:fs";
+import { randomUUID } from "node:crypto";
+import { StreamRegistry } from "../../shared/src/StreamRegistry.js";
 
 abstract class Storage {
+  protected _readStreams;
+
+  constructor({ readStreams }: { readStreams: StreamRegistry<ReadStream> }) {
+    this._readStreams = readStreams;
+  }
+
   abstract createEventsArchive(options: {
     uuid: string;
     path: string;
@@ -21,10 +30,6 @@ export class RAMStorage extends Storage {
   #storage: RAMStorageObject = {
     eventArchives: {},
   };
-
-  constructor() {
-    super();
-  }
 
   async createEventsArchive({
     uuid,
@@ -45,6 +50,10 @@ export class RAMStorage extends Storage {
   }: {
     archiveUUID: string;
   }): Promise<string | undefined> {
-    return this.#storage.eventArchives[archiveUUID];
+    const path = this.#storage.eventArchives[archiveUUID];
+    if (path === undefined) return undefined;
+    const uuid = randomUUID();
+    this._readStreams.set(uuid, createReadStream(path));
+    return uuid;
   }
 }

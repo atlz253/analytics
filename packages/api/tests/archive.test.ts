@@ -13,21 +13,25 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import AdmZip from "adm-zip";
 import { omit } from "ramda";
+import { StreamRegistry } from "../../shared/src/StreamRegistry.js";
+import { ReadStream } from "node:fs";
 
 describe("/archive", async () => {
   let events = new ImmutableEventEmitter();
-  let api = new API({ events });
+  let readStreams = new StreamRegistry<ReadStream>();
+  let api = new API({ events, readStreams });
   let eventsModule = await initEvents({ events, storage: { type: "RAM" } });
-  let archive = new Archive({ events });
+  let archive = new Archive({ events, readStreams });
 
   const url = (...parts: Array<string>) =>
     urlJoin(localhost(api.port), "archive", ...parts);
 
   beforeEach(async () => {
     events = new ImmutableEventEmitter();
-    api = new API({ events });
+    readStreams = new StreamRegistry<ReadStream>();
+    api = new API({ events, readStreams });
     eventsModule = await initEvents({ events, storage: { type: "RAM" } });
-    archive = new Archive({ events });
+    archive = new Archive({ events, readStreams });
     await api.listen();
   });
 

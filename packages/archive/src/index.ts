@@ -10,13 +10,22 @@ import { RAMStorage } from "./storage.js";
 import { unlink } from "node:fs/promises";
 import { zipJSON } from "./archive.js";
 import { UserActivityEvent } from "events/src/types.js";
+import { StreamRegistry } from "../../shared/src/StreamRegistry.js";
+import { ReadStream } from "node:fs";
 
 export class Archive {
   #events;
-  #storage = new RAMStorage();
+  #storage;
 
-  constructor({ events }: { events: ImmutableEventEmitter }) {
+  constructor({
+    events,
+    readStreams,
+  }: {
+    events: ImmutableEventEmitter;
+    readStreams: StreamRegistry<ReadStream>;
+  }) {
     this.#events = events;
+    this.#storage = new RAMStorage({ readStreams });
     (
       [
         [
@@ -54,10 +63,10 @@ export class Archive {
 
   async #readEventsArchive(event: ImmutableEvent<[{ archiveUUID: string }]>) {
     const [{ archiveUUID }] = event.args;
-    const path = await this.#storage.readEventsArchive({ archiveUUID });
+    const streamUUID = await this.#storage.readEventsArchive({ archiveUUID });
     this.#events.emit(archiveEventNames.readEventsArchiveAfter, {
       ...event,
-      response: { path, found: path !== undefined },
+      response: { streamUUID, found: streamUUID !== undefined },
     });
   }
 }
