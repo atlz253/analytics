@@ -22,7 +22,7 @@ export abstract class AbstractArchive {
   }): Promise<Readable | undefined>;
 }
 
-export class MockArchive extends AbstractArchive {
+export class ArchiveMock extends AbstractArchive {
   createEventsArchive(options: {
     timeInterval: TimeInterval;
   }): Promise<string> {

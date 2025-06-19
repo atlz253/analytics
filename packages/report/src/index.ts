@@ -3,39 +3,65 @@ import {
   ImmutableEventEmitter,
 } from "../../shared/src/ImmutableEventEmitter.js";
 import { TimeInterval } from "../../shared/src/types/timeInterval.js";
-import reportEventNames from "./events.js";
 import eventsEventNames from "../../events/src/events.js";
 import { UserActivityEvent } from "events/src/types.js";
 import { EventTypesReport, UserReport, UsersReport } from "./types.js";
 
-export class Report {
+export abstract class AbstractReport {
+  abstract createUsersReport(event: {
+    timeInterval: TimeInterval;
+  }): Promise<UsersReport>;
+
+  abstract createUserReport(event: {
+    userUUID: string;
+    timeInterval: TimeInterval;
+  }): Promise<UserReport>;
+
+  abstract createEventTypesReport(event: {
+    timeInterval: TimeInterval;
+  }): Promise<EventTypesReport>;
+
+  abstract createEventsReport(event: {
+    timeInterval: TimeInterval;
+  }): Promise<Array<UserActivityEvent>>;
+}
+
+export class ReportMock extends AbstractReport {
+  createUsersReport(event: {
+    timeInterval: TimeInterval;
+  }): Promise<UsersReport> {
+    throw new Error("Mock");
+  }
+
+  createUserReport(event: {
+    userUUID: string;
+    timeInterval: TimeInterval;
+  }): Promise<UserReport> {
+    throw new Error("Mock");
+  }
+
+  createEventTypesReport(event: {
+    timeInterval: TimeInterval;
+  }): Promise<EventTypesReport> {
+    throw new Error("Mock");
+  }
+
+  createEventsReport(event: {
+    timeInterval: TimeInterval;
+  }): Promise<Array<UserActivityEvent>> {
+    throw new Error("Mock");
+  }
+}
+
+export class Report extends AbstractReport {
   #events;
 
   constructor({ events }: { events: ImmutableEventEmitter }) {
+    super();
     this.#events = events;
-    (
-      [
-        [
-          reportEventNames.createUsersReport,
-          this.#createUsersReport.bind(this),
-        ],
-        [reportEventNames.createUserReport, this.#createUserReport.bind(this)],
-        [
-          reportEventNames.createEventTypesReport,
-          this.#createEventTypesReport.bind(this),
-        ],
-        [
-          reportEventNames.createEventsReport,
-          this.#createEventsReport.bind(this),
-        ],
-      ] as const
-    ).map(([e, c]) => events.on(e, c));
   }
 
-  async #createUsersReport(
-    event: ImmutableEvent<[{ timeInterval: TimeInterval }]>
-  ) {
-    const [options] = event.args;
+  async createUsersReport(options: { timeInterval: TimeInterval }) {
     const events = (await this.#events.request(
       eventsEventNames.readMultiple,
       eventsEventNames.readMultipleAfter,
@@ -49,16 +75,13 @@ export class Report {
           eventsCount: events.filter((e) => e.userUUID === uuid).length,
         })
     );
-    this.#events.emit(reportEventNames.createUsersReportAfter, {
-      ...event,
-      response: result,
-    });
+    return result;
   }
 
-  async #createUserReport(
-    event: ImmutableEvent<[{ userUUID: string; timeInterval: TimeInterval }]>
-  ) {
-    const [options] = event.args;
+  async createUserReport(options: {
+    userUUID: string;
+    timeInterval: TimeInterval;
+  }) {
     const events = (await this.#events.request(
       eventsEventNames.readMultiple,
       eventsEventNames.readMultipleAfter,
@@ -71,16 +94,10 @@ export class Report {
             eventsData.events[e.type].count + 1)
         : (eventsData.events[e.type] = { count: 1 })
     );
-    this.#events.emit(reportEventNames.createUserReportAfter, {
-      ...event,
-      response: eventsData,
-    });
+    return eventsData;
   }
 
-  async #createEventTypesReport(
-    event: ImmutableEvent<[{ timeInterval: TimeInterval }]>
-  ) {
-    const [options] = event.args;
+  async createEventTypesReport(options: { timeInterval: TimeInterval }) {
     const events = (await this.#events.request(
       eventsEventNames.readMultiple,
       eventsEventNames.readMultipleAfter,
@@ -92,24 +109,15 @@ export class Report {
         ? (report.events[e.type] = { count: 1 })
         : (report.events[e.type].count = report.events[e.type].count + 1)
     );
-    this.#events.emit(reportEventNames.createEventTypesReportAfter, {
-      ...event,
-      response: report,
-    });
+    return report;
   }
 
-  async #createEventsReport(
-    event: ImmutableEvent<[{ timeInterval: TimeInterval }]>
-  ) {
-    const [options] = event.args;
+  async createEventsReport(options: { timeInterval: TimeInterval }) {
     const events = (await this.#events.request(
       eventsEventNames.readMultiple,
       eventsEventNames.readMultipleAfter,
       options
     )) as Array<UserActivityEvent>;
-    this.#events.emit(reportEventNames.createEventsReportAfter, {
-      ...event,
-      response: events,
-    });
+    return events;
   }
 }

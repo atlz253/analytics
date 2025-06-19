@@ -3,15 +3,24 @@ import { API } from "../src/index.js";
 import { Ping } from "../../ping/src/index.js";
 import { localhost } from "./utils/address.js";
 import { ImmutableEventEmitter } from "../../shared/src/ImmutableEventEmitter.js";
-import { MockArchive } from "../../archive/src/index.js";
+import { ArchiveMock } from "../../archive/src/index.js";
+import { ReportMock } from "../../report/src/index.js";
 
 describe("/ping", () => {
   let events = new ImmutableEventEmitter();
-  let api = new API({ events, archive: new MockArchive() });
+  let api = new API({
+    events,
+    archive: new ArchiveMock(),
+    report: new ReportMock(),
+  });
 
   beforeEach(async () => {
     events = new ImmutableEventEmitter();
-    api = new API({ events, archive: new MockArchive() });
+    api = new API({
+      events,
+      archive: new ArchiveMock(),
+      report: new ReportMock(),
+    });
     new Ping();
     await api.listen();
   });

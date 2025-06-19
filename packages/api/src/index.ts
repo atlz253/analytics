@@ -6,6 +6,7 @@ import { ImmutableEventEmitter } from "../../shared/src/ImmutableEventEmitter.js
 import archiveRoute from "./routes/archive.js";
 import { AbstractArchive } from "../../archive/src/index.js";
 import { Ping } from "../../ping/src/index.js";
+import { AbstractReport } from "../../report/src/index.js";
 
 export class API {
   #port;
@@ -23,24 +24,24 @@ export class API {
   constructor({
     events,
     archive,
+    report,
     logger = false,
     ping = new Ping(),
     port,
   }: {
     events: ImmutableEventEmitter;
     archive: AbstractArchive;
+    report: AbstractReport;
     ping?: Ping;
     logger?: boolean;
     port?: number;
   }) {
     this.#port = port;
     this.#fastify = Fastify({ logger });
-    (
-      [
-        [eventRoute, { events, prefix: "/event" }],
-        [reportRoute, { events, prefix: "/report" }],
-      ] as const
-    ).forEach(([plugin, opts]) => this.#fastify.register(plugin, opts));
+    ([[eventRoute, { events, prefix: "/event" }]] as const).forEach(
+      ([plugin, opts]) => this.#fastify.register(plugin, opts)
+    );
+    this.#fastify.register(reportRoute, { report, prefix: "/report" });
     this.#fastify.register(pingRoute, { ping, prefix: "/ping" });
     this.#fastify.register(archiveRoute, {
       archive,

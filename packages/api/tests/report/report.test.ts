@@ -11,11 +11,12 @@ import eventsEventNames from "events/src/events.js";
 import { UserActivityEvent } from "events/src/types.js";
 import mock from "./mock.js";
 import { omit } from "ramda";
+import { ArchiveMock } from "../../../archive/src/index.js";
 
 describe("/report", async () => {
   let events = new ImmutableEventEmitter();
-  let api = new API({ events });
   let report = new Report({ events });
+  let api = new API({ events, report, archive: new ArchiveMock() });
   let eventsModule = await initEvents({ events, storage: { type: "RAM" } });
 
   const url = (...parts: string[]) =>
@@ -30,8 +31,8 @@ describe("/report", async () => {
 
   beforeEach(async () => {
     events = new ImmutableEventEmitter();
-    api = new API({ events });
     report = new Report({ events });
+    api = new API({ events, report, archive: new ArchiveMock() });
     eventsModule = await initEvents({ events, storage: { type: "RAM" } });
     await api.listen();
   });

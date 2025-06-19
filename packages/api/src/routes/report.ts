@@ -1,12 +1,10 @@
 import { FastifyPluginCallback } from "fastify";
-import { ImmutableEventEmitter } from "../../../shared/src/ImmutableEventEmitter.js";
-import eventNames from "../../../report/src/events.js";
-import { EventTypesReport, UserReport } from "../../../report/src/types.js";
-import { UserActivityEvent } from "events/src/types.js";
 import timeIntervalSchema from "../schemas/timeIntervalSchema.js";
+import { AbstractReport } from "../../../report/src/index.js";
+import { TimeInterval } from "../../../shared/src/types/timeInterval.js";
 
-export default ((fastify, { events }, done) => {
-  fastify.route({
+export default ((fastify, { report }, done) => {
+  fastify.route<{ Body: { timeInterval: TimeInterval } }>({
     method: "POST",
     url: "/users",
     schema: {
@@ -19,16 +17,14 @@ export default ((fastify, { events }, done) => {
       },
     },
     handler: async (request, reply) => {
-      const users = await events.request(
-        eventNames.createUsersReport,
-        eventNames.createUsersReportAfter,
-        request.body
-      );
-      return { statusCode: 200, users: users };
+      return {
+        statusCode: 200,
+        users: await report.createUsersReport(request.body),
+      };
     },
   });
 
-  fastify.route({
+  fastify.route<{ Body: { timeInterval: TimeInterval; userUUID: string } }>({
     method: "POST",
     url: "/user",
     schema: {
@@ -45,16 +41,14 @@ export default ((fastify, { events }, done) => {
       },
     },
     handler: async (request, reply) => {
-      const userData = (await events.request(
-        eventNames.createUserReport,
-        eventNames.createUserReportAfter,
-        request.body
-      )) as UserReport;
-      return { ...userData, statusCode: 200 };
+      return {
+        ...(await report.createUserReport(request.body)),
+        statusCode: 200,
+      };
     },
   });
 
-  fastify.route({
+  fastify.route<{ Body: { timeInterval: TimeInterval } }>({
     method: "POST",
     url: "/eventTypes",
     schema: {
@@ -67,16 +61,14 @@ export default ((fastify, { events }, done) => {
       },
     },
     handler: async (request, reply) => {
-      const report = (await events.request(
-        eventNames.createEventTypesReport,
-        eventNames.createEventTypesReportAfter,
-        request.body
-      )) as EventTypesReport;
-      return { ...report, statusCode: 200 };
+      return {
+        ...(await report.createEventTypesReport(request.body)),
+        statusCode: 200,
+      };
     },
   });
 
-  fastify.route({
+  fastify.route<{ Body: { timeInterval: TimeInterval } }>({
     method: "POST",
     url: "/events",
     schema: {
@@ -89,16 +81,14 @@ export default ((fastify, { events }, done) => {
       },
     },
     handler: async (request, reply) => {
-      const userEvents = (await events.request(
-        eventNames.createEventsReport,
-        eventNames.createEventsReportAfter,
-        request.body
-      )) as Array<UserActivityEvent>;
-      return { statusCode: 200, events: userEvents };
+      return {
+        statusCode: 200,
+        events: await report.createEventsReport(request.body),
+      };
     },
   });
 
   done();
 }) as FastifyPluginCallback<{
-  events: ImmutableEventEmitter;
+  report: AbstractReport;
 }>;
