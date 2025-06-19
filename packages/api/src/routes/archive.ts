@@ -1,13 +1,11 @@
 import { FastifyPluginCallback } from "fastify";
-import { ImmutableEventEmitter } from "../../../shared/src/ImmutableEventEmitter.js";
 import timeIntervalSchema from "../schemas/timeIntervalSchema.js";
-import eventNames from "../../../archive/src/events.js";
 import urlJoin from "url-join";
-import { StreamRegistry } from "../../../shared/src/StreamRegistry.js";
-import { Readable } from "node:stream";
+import { Archive } from "../../../archive/src/index.js";
+import { TimeInterval } from "../../../shared/src/types/timeInterval.js";
 
-export default ((fastify, { events, readStreams }, done) => {
-  fastify.route({
+export default ((fastify, { archive }, done) => {
+  fastify.route<{ Body: { timeInterval: TimeInterval } }>({
     method: "POST",
     url: "/events",
     schema: {
@@ -20,18 +18,14 @@ export default ((fastify, { events, readStreams }, done) => {
       },
     },
     handler: async (request, reply) => {
-      const response = (await events.request(
-        eventNames.createEventsArchive,
-        eventNames.createEventsArchiveAfter,
-        request.body
-      )) as { archiveUUID: string };
+      const archiveUUID = await archive.createEventsArchive(request.body);
       return {
         statusCode: 200,
         archiveURL: urlJoin(
           `${request.protocol}://`,
           request.host,
           request.url,
-          response.archiveUUID
+          archiveUUID
         ),
       };
     },
@@ -53,34 +47,21 @@ export default ((fastify, { events, readStreams }, done) => {
       },
     },
     handler: async (request, reply) => {
-      const { archiveUUID } = request.params;
-      const response = (await events.request(
-        eventNames.readEventsArchive,
-        eventNames.readEventsArchiveAfter,
-        { archiveUUID }
-      )) as { found: false } | { found: true; streamUUID: string };
-      if (response.found) {
-        const stream = readStreams.get(response.streamUUID);
-        if (stream === undefined) {
-          return {
+      const stream = await archive.readEventsArchive(request.params);
+      if (stream) {
+        stream.on("error", (error) => {
+          reply.send({
             statusCode: 500,
-            error: "File stream no found",
-          };
-        } else {
-          stream.on("error", (error) => {
-            reply.send({
-              statusCode: 500,
-              error: "Error streaming file",
-            });
+            error: "Error streaming file",
           });
-          return reply
-            .type("application/zip")
-            .header(
-              "Content-Disposition",
-              `attachment; filename="${archiveUUID}.zip"`
-            )
-            .send(stream);
-        }
+        });
+        return reply
+          .type("application/zip")
+          .header(
+            "Content-Disposition",
+            `attachment; filename="${request.params.archiveUUID}.zip"`
+          )
+          .send(stream);
       } else {
         return { statusCode: 404, error: "File not found" };
       }
@@ -88,7 +69,4 @@ export default ((fastify, { events, readStreams }, done) => {
   });
 
   done();
-}) as FastifyPluginCallback<{
-  events: ImmutableEventEmitter;
-  readStreams: StreamRegistry<Readable>;
-}>;
+}) as FastifyPluginCallback<{ archive: Archive }>;

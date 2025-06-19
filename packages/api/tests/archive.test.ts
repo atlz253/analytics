@@ -21,13 +21,12 @@ import { unlink } from "node:fs/promises";
 describe("/archive", async () => {
   let events = new ImmutableEventEmitter();
   let readStreams = new StreamRegistry<ReadStream>();
-  let api = new API({ events, readStreams });
   let eventsModule = await initEvents({ events, storage: { type: "RAM" } });
   let archive = await initArchive({
     events,
-    readStreams,
     storage: { type: "RAM" },
   });
+  let api = new API({ events, archive });
 
   const url = (...parts: Array<string>) =>
     urlJoin(localhost(api.port), "archive", ...parts);
@@ -35,13 +34,12 @@ describe("/archive", async () => {
   beforeEach(async () => {
     events = new ImmutableEventEmitter();
     readStreams = new StreamRegistry<ReadStream>();
-    api = new API({ events, readStreams });
     eventsModule = await initEvents({ events, storage: { type: "RAM" } });
     archive = await initArchive({
       events,
-      readStreams,
       storage: { type: "RAM" },
     });
+    api = new API({ events, archive });
     await api.listen();
   });
 

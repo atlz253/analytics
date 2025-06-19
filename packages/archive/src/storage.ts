@@ -1,19 +1,11 @@
 import { tmpdir } from "node:os";
 import { basename, join } from "node:path";
 import { copyFile, mkdir } from "node:fs/promises";
-import { createReadStream, ReadStream, statSync } from "node:fs";
-import { randomUUID } from "node:crypto";
-import { StreamRegistry } from "../../shared/src/StreamRegistry.js";
+import { createReadStream, statSync } from "node:fs";
 import { Db, GridFSBucket, MongoClient } from "mongodb";
 import { Readable } from "node:stream";
 
 export abstract class Storage {
-  protected _readStreams;
-
-  constructor({ readStreams }: { readStreams: StreamRegistry<Readable> }) {
-    this._readStreams = readStreams;
-  }
-
   abstract createEventsArchive(options: {
     uuid: string;
     path: string;
@@ -21,7 +13,7 @@ export abstract class Storage {
 
   abstract readEventsArchive(options: {
     archiveUUID: string;
-  }): Promise<string | undefined>;
+  }): Promise<Readable | undefined>;
 }
 
 interface RAMStorageObject {
@@ -51,28 +43,18 @@ export class RAMStorage extends Storage {
     archiveUUID,
   }: {
     archiveUUID: string;
-  }): Promise<string | undefined> {
+  }): Promise<Readable | undefined> {
     const path = this.#storage.eventArchives[archiveUUID];
     if (path === undefined) return undefined;
-    const uuid = randomUUID();
-    this._readStreams.set(uuid, createReadStream(path));
-    return uuid;
+    return createReadStream(path);
   }
 }
 
 export class MongoStorage extends Storage {
-  #db;
   #archivesBucket;
 
-  constructor({
-    readStreams,
-    db,
-  }: {
-    readStreams: StreamRegistry<Readable>;
-    db: Db;
-  }) {
-    super({ readStreams });
-    this.#db = db;
+  constructor({ db }: { db: Db }) {
+    super();
     this.#archivesBucket = new GridFSBucket(db, { bucketName: "userEvents" });
   }
 
@@ -104,33 +86,22 @@ export class MongoStorage extends Storage {
     archiveUUID,
   }: {
     archiveUUID: string;
-  }): Promise<string | undefined> {
+  }): Promise<Readable | undefined> {
     const fileInfo = await this.#archivesBucket
       .find({ filename: archiveUUID })
       .toArray();
     if (fileInfo.length === 0) return undefined;
-    const downloadStream = this.#archivesBucket.openDownloadStream(
-      fileInfo[0]._id
-    );
-    const uuid = randomUUID();
-    this._readStreams.set(uuid, downloadStream);
-    return uuid;
+    return this.#archivesBucket.openDownloadStream(fileInfo[0]._id);
   }
 }
 
-export async function storage({
-  type,
-  readStreams,
-}: {
-  type: "RAM" | "mongo";
-  readStreams: StreamRegistry<Readable>;
-}) {
+export async function storage({ type }: { type: "RAM" | "mongo" }) {
   switch (type) {
     case "RAM":
-      return new RAMStorage({ readStreams });
+      return new RAMStorage();
     case "mongo":
       const client = new MongoClient("mongodb://root:example@mongodb:27017/");
       await client.connect();
-      return new MongoStorage({ readStreams, db: client.db("archive") });
+      return new MongoStorage({ db: client.db("archive") });
   }
 }

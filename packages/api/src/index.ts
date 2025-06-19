@@ -4,8 +4,7 @@ import eventRoute from "./routes/event.js";
 import reportRoute from "./routes/report.js";
 import { ImmutableEventEmitter } from "../../shared/src/ImmutableEventEmitter.js";
 import archiveRoute from "./routes/archive.js";
-import { StreamRegistry } from "../../shared/src/StreamRegistry.js";
-import { Readable } from "node:stream";
+import { Archive } from "../../archive/src/index.js";
 
 export class API {
   #port;
@@ -22,12 +21,12 @@ export class API {
 
   constructor({
     events,
-    readStreams,
+    archive,
     logger = false,
     port,
   }: {
     events: ImmutableEventEmitter;
-    readStreams: StreamRegistry<Readable>;
+    archive: Archive;
     logger?: boolean;
     port?: number;
   }) {
@@ -41,8 +40,7 @@ export class API {
       ] as const
     ).forEach(([plugin, opts]) => this.#fastify.register(plugin, opts));
     this.#fastify.register(archiveRoute, {
-      events,
-      readStreams,
+      archive,
       prefix: "/archive",
     });
   }
