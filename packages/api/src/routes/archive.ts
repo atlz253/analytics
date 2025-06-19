@@ -1,7 +1,7 @@
 import { FastifyPluginCallback } from "fastify";
 import timeIntervalSchema from "../schemas/timeIntervalSchema.js";
 import urlJoin from "url-join";
-import { Archive } from "../../../archive/src/index.js";
+import { AbstractArchive } from "../../../archive/src/index.js";
 import { TimeInterval } from "../../../shared/src/types/timeInterval.js";
 
 export default ((fastify, { archive }, done) => {
@@ -69,4 +69,4 @@ export default ((fastify, { archive }, done) => {
   });
 
   done();
-}) as FastifyPluginCallback<{ archive: Archive }>;
+}) as FastifyPluginCallback<{ archive: AbstractArchive }>;

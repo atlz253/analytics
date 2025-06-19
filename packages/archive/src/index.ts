@@ -10,8 +10,33 @@ import { unlink } from "node:fs/promises";
 import { zipJSON } from "./archive.js";
 import { UserActivityEvent } from "events/src/types.js";
 import { storage as initStorage } from "./storage.js";
+import { Readable } from "node:stream";
 
-export class Archive {
+export abstract class AbstractArchive {
+  abstract createEventsArchive(options: {
+    timeInterval: TimeInterval;
+  }): Promise<string>;
+
+  abstract readEventsArchive(options: {
+    archiveUUID: string;
+  }): Promise<Readable | undefined>;
+}
+
+export class MockArchive extends AbstractArchive {
+  createEventsArchive(options: {
+    timeInterval: TimeInterval;
+  }): Promise<string> {
+    throw new Error("Mocked");
+  }
+
+  readEventsArchive(options: {
+    archiveUUID: string;
+  }): Promise<Readable | undefined> {
+    throw new Error("Mocked");
+  }
+}
+
+export class Archive extends AbstractArchive {
   #events;
   #storage;
 
@@ -22,6 +47,7 @@ export class Archive {
     events: ImmutableEventEmitter;
     storage: Storage;
   }) {
+    super();
     this.#events = events;
     this.#storage = storage;
   }
