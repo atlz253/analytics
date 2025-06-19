@@ -7,6 +7,10 @@ abstract class Storage {
     uuid: string;
     path: string;
   }): Promise<void>;
+
+  abstract readEventsArchive(options: {
+    archiveUUID: string;
+  }): Promise<string | undefined>;
 }
 
 interface RAMStorageObject {
@@ -34,5 +38,13 @@ export class RAMStorage extends Storage {
     await mkdir(this.#eventArchivesDirectory, { recursive: true });
     await copyFile(path, destination);
     this.#storage.eventArchives[uuid] = destination;
+  }
+
+  async readEventsArchive({
+    archiveUUID,
+  }: {
+    archiveUUID: string;
+  }): Promise<string | undefined> {
+    return this.#storage.eventArchives[archiveUUID];
   }
 }

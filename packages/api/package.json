@@ -6,5 +6,9 @@
   "dependencies": {
     "fastify": "^5.4.0",
     "url-join": "^5.0.0"
+  },
+  "devDependencies": {
+    "@types/adm-zip": "^0.5.7",
+    "adm-zip": "^0.5.16"
   }
 }

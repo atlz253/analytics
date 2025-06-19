@@ -17,10 +17,18 @@ export class Archive {
 
   constructor({ events }: { events: ImmutableEventEmitter }) {
     this.#events = events;
-    events.on(
-      archiveEventNames.createEventsArchive,
-      this.#createEventsArchive.bind(this)
-    );
+    (
+      [
+        [
+          archiveEventNames.createEventsArchive,
+          this.#createEventsArchive.bind(this),
+        ],
+        [
+          archiveEventNames.readEventsArchive,
+          this.#readEventsArchive.bind(this),
+        ],
+      ] as const
+    ).map(([e, c]) => events.on(e, c));
   }
 
   async #createEventsArchive(
@@ -41,6 +49,15 @@ export class Archive {
     this.#events.emit(archiveEventNames.createEventsArchiveAfter, {
       ...event,
       response: { archiveUUID: uuid },
+    });
+  }
+
+  async #readEventsArchive(event: ImmutableEvent<[{ archiveUUID: string }]>) {
+    const [{ archiveUUID }] = event.args;
+    const path = await this.#storage.readEventsArchive({ archiveUUID });
+    this.#events.emit(archiveEventNames.readEventsArchiveAfter, {
+      ...event,
+      response: { path, found: path !== undefined },
     });
   }
 }

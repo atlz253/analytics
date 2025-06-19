@@ -8,7 +8,11 @@ import { localhost } from "./utils/address.js";
 import fastify from "./utils/fastify.js";
 import eventsEventNames from "../../events/src/events.js";
 import { UserActivityEvent } from "events/src/types.js";
-import { post } from "./utils/fetch.js";
+import { downloadFile, post } from "./utils/fetch.js";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import AdmZip from "adm-zip";
+import { omit } from "ramda";
 
 describe("/archive", async () => {
   let events = new ImmutableEventEmitter();
@@ -208,5 +212,83 @@ describe("/archive", async () => {
     });
     expect(response.statusCode).toBe(200);
     expect(() => new URL(response.archiveURL)).not.toThrowError("Invalid URL");
+    const zipPath = join(tmpdir(), "test.archive.events.zip");
+    await downloadFile(response.archiveURL, zipPath);
+    const zip = new AdmZip(zipPath);
+    const eventsFile = zip
+      .getEntries()
+      .find((e) => e.entryName === "events.json");
+    const readEvents = JSON.parse(
+      eventsFile?.getData().toString("utf-8") || ""
+    );
+    if (!Array.isArray(readEvents))
+      throw new Error("Прочитанные данные не являются массивом");
+    expect(
+      readEvents.map((e) =>
+        typeof e === "object" && e !== null
+          ? omit(["createTime"], {
+              ...e,
+              occurrenceTime: new Date(e.occurrenceTime),
+            })
+          : e
+      )
+    ).toEqual([
+      {
+        eventType: "userActivity",
+        occurrenceTime: new Date("2024-06-07T21:29:48.456Z"),
+        type: "scroll",
+        userUUID: "r9s0t1u2-3v4w-5678-9012-345678901rst",
+        page: "blog",
+      },
+      {
+        eventType: "userActivity",
+        occurrenceTime: new Date("2024-06-20T08:15:35.789Z"),
+        type: "click",
+        userUUID: "m4n5o6p7-8q9r-0123-4567-890123456mnp",
+        page: "testimonials",
+      },
+      {
+        eventType: "userActivity",
+        occurrenceTime: new Date("2024-07-03T15:42:17.123Z"),
+        type: "page_view",
+        userUUID: "v2w3x4y5-6z7a-8901-2345-678901234vwx",
+        page: "features",
+      },
+      {
+        eventType: "userActivity",
+        occurrenceTime: new Date("2024-07-16T10:37:59.567Z"),
+        type: "hover",
+        userUUID: "x7y8z9a1-2b3c-4567-8901-234567890xyz",
+        page: "team",
+      },
+      {
+        eventType: "userActivity",
+        occurrenceTime: new Date("2024-08-02T17:04:23.890Z"),
+        type: "double_click",
+        userUUID: "g5h6i7j8-9k0l-1234-5678-901234567ghi",
+        page: "resources",
+      },
+      {
+        eventType: "userActivity",
+        occurrenceTime: new Date("2024-08-19T06:51:41.234Z"),
+        type: "form_submit",
+        userUUID: "k1l2m3n4-5o6p-7890-1234-567890123klm",
+        page: "contact",
+      },
+      {
+        eventType: "userActivity",
+        occurrenceTime: new Date("2024-09-05T14:18:07.678Z"),
+        type: "key_press",
+        userUUID: "v2w3x4y5-6z7a-8901-2345-678901234vwx",
+        page: "search",
+      },
+      {
+        eventType: "userActivity",
+        occurrenceTime: new Date("2024-09-22T20:35:52.012Z"),
+        type: "page_view",
+        userUUID: "r9s0t1u2-3v4w-5678-9012-345678901rst",
+        page: "documentation",
+      },
+    ]);
   });
 });
