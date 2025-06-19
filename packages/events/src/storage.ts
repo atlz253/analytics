@@ -23,6 +23,7 @@ interface RAMStorageObject {
   events: Array<UserActivityEvent>;
 }
 
+// TODO: убрать эту возможность
 interface RAMStorageOptions {
   storage?: RAMStorageObject;
 }
