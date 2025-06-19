@@ -22,10 +22,12 @@ describe("Создание архивов", async () => {
 
   beforeEach(async () => {
     await post(url("event/drop_database"), { body: JSON.stringify({}) });
+    await post(url("archive/drop_database"), { body: JSON.stringify({}) });
   });
 
   afterAll(async () => {
     await post(url("event/drop_database"), { body: JSON.stringify({}) });
+    await post(url("archive/drop_database"), { body: JSON.stringify({}) });
   });
 
   test("Должен формироваться архив с пользовательскими событиями", async () => {

@@ -15,6 +15,8 @@ export abstract class AbstractArchive {
   abstract readEventsArchive(options: {
     archiveUUID: string;
   }): Promise<Readable | undefined>;
+
+  abstract dropDatabase(): Promise<void>;
 }
 
 export class ArchiveMock extends AbstractArchive {
@@ -27,6 +29,10 @@ export class ArchiveMock extends AbstractArchive {
   readEventsArchive(options: {
     archiveUUID: string;
   }): Promise<Readable | undefined> {
+    throw new Error("Mocked");
+  }
+
+  dropDatabase(): Promise<void> {
     throw new Error("Mocked");
   }
 }
@@ -60,6 +66,10 @@ export class Archive extends AbstractArchive {
 
   async readEventsArchive({ archiveUUID }: { archiveUUID: string }) {
     return await this.#storage.readEventsArchive({ archiveUUID });
+  }
+
+  async dropDatabase(): Promise<void> {
+    await this.#storage.dropDatabase();
   }
 }
 

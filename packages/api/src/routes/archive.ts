@@ -68,5 +68,15 @@ export default ((fastify, { archive }, done) => {
     },
   });
 
+  // TODO: сделать доступным только в режиме отладки
+  fastify.route({
+    method: "POST",
+    url: "/drop_database",
+    handler: async (request, reply) => {
+      await archive.dropDatabase();
+      return { statusCode: 200 };
+    },
+  });
+
   done();
 }) as FastifyPluginCallback<{ archive: AbstractArchive }>;

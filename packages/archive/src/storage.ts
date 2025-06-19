@@ -14,6 +14,8 @@ export abstract class Storage {
   abstract readEventsArchive(options: {
     archiveUUID: string;
   }): Promise<Readable | undefined>;
+
+  abstract dropDatabase(): Promise<void>;
 }
 
 interface RAMStorageObject {
@@ -48,13 +50,21 @@ export class RAMStorage extends Storage {
     if (path === undefined) return undefined;
     return createReadStream(path);
   }
+
+  async dropDatabase(): Promise<void> {
+    this.#storage = {
+      eventArchives: {},
+    };
+  }
 }
 
 export class MongoStorage extends Storage {
+  #db;
   #archivesBucket;
 
   constructor({ db }: { db: Db }) {
     super();
+    this.#db = db;
     this.#archivesBucket = new GridFSBucket(db, { bucketName: "userEvents" });
   }
 
@@ -92,6 +102,13 @@ export class MongoStorage extends Storage {
       .toArray();
     if (fileInfo.length === 0) return undefined;
     return this.#archivesBucket.openDownloadStream(fileInfo[0]._id);
+  }
+
+  async dropDatabase() {
+    await this.#db.dropDatabase();
+    this.#archivesBucket = new GridFSBucket(this.#db, {
+      bucketName: "userEvents",
+    });
   }
 }
 
