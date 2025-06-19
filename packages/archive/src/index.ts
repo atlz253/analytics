@@ -6,26 +6,27 @@ import { TimeInterval } from "../../shared/src/types/timeInterval.js";
 import archiveEventNames from "./events.js";
 import eventEventNames from "../../events/src/events.js";
 import { randomUUID } from "node:crypto";
-import { RAMStorage } from "./storage.js";
+import { Storage } from "./storage.js";
 import { unlink } from "node:fs/promises";
 import { zipJSON } from "./archive.js";
 import { UserActivityEvent } from "events/src/types.js";
 import { StreamRegistry } from "../../shared/src/StreamRegistry.js";
-import { ReadStream } from "node:fs";
+import { storage as initStorage } from "./storage.js";
+import { Readable } from "node:stream";
 
-export class Archive {
+class Archive {
   #events;
   #storage;
 
   constructor({
     events,
-    readStreams,
+    storage,
   }: {
     events: ImmutableEventEmitter;
-    readStreams: StreamRegistry<ReadStream>;
+    storage: Storage;
   }) {
     this.#events = events;
-    this.#storage = new RAMStorage({ readStreams });
+    this.#storage = storage;
     (
       [
         [
@@ -69,4 +70,19 @@ export class Archive {
       response: { streamUUID, found: streamUUID !== undefined },
     });
   }
+}
+
+export async function archive({
+  events,
+  readStreams,
+  storage,
+}: {
+  events: ImmutableEventEmitter;
+  readStreams: StreamRegistry<Readable>;
+  storage: { type: "RAM" | "mongo" };
+}) {
+  return new Archive({
+    events,
+    storage: await initStorage({ ...storage, readStreams }),
+  });
 }

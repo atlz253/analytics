@@ -2,26 +2,32 @@ import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { ImmutableEventEmitter } from "../../shared/src/ImmutableEventEmitter.js";
 import { API } from "../src/index.js";
 import { events as initEvents } from "../../events/src/index.js";
-import { Archive } from "../../archive/src/index.js";
+import { archive as initArchive } from "../../archive/src/index.js";
 import urlJoin from "url-join";
 import { localhost } from "./utils/address.js";
 import fastify from "./utils/fastify.js";
 import eventsEventNames from "../../events/src/events.js";
 import { UserActivityEvent } from "events/src/types.js";
-import { downloadFile, post } from "./utils/fetch.js";
+import { post } from "./utils/fetch.js";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import AdmZip from "adm-zip";
 import { omit } from "ramda";
 import { StreamRegistry } from "../../shared/src/StreamRegistry.js";
 import { ReadStream } from "node:fs";
+import { downloadFile } from "../../shared/src/tests/downloadFile.js";
+import { unlink } from "node:fs/promises";
 
 describe("/archive", async () => {
   let events = new ImmutableEventEmitter();
   let readStreams = new StreamRegistry<ReadStream>();
   let api = new API({ events, readStreams });
   let eventsModule = await initEvents({ events, storage: { type: "RAM" } });
-  let archive = new Archive({ events, readStreams });
+  let archive = await initArchive({
+    events,
+    readStreams,
+    storage: { type: "RAM" },
+  });
 
   const url = (...parts: Array<string>) =>
     urlJoin(localhost(api.port), "archive", ...parts);
@@ -31,7 +37,11 @@ describe("/archive", async () => {
     readStreams = new StreamRegistry<ReadStream>();
     api = new API({ events, readStreams });
     eventsModule = await initEvents({ events, storage: { type: "RAM" } });
-    archive = new Archive({ events, readStreams });
+    archive = await initArchive({
+      events,
+      readStreams,
+      storage: { type: "RAM" },
+    });
     await api.listen();
   });
 
@@ -294,5 +304,6 @@ describe("/archive", async () => {
         page: "documentation",
       },
     ]);
+    await unlink(zipPath);
   });
 });

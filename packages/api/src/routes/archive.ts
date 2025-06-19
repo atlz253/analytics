@@ -3,8 +3,8 @@ import { ImmutableEventEmitter } from "../../../shared/src/ImmutableEventEmitter
 import timeIntervalSchema from "../schemas/timeIntervalSchema.js";
 import eventNames from "../../../archive/src/events.js";
 import urlJoin from "url-join";
-import { ReadStream } from "node:fs";
 import { StreamRegistry } from "../../../shared/src/StreamRegistry.js";
+import { Readable } from "node:stream";
 
 export default ((fastify, { events, readStreams }, done) => {
   fastify.route({
@@ -90,5 +90,5 @@ export default ((fastify, { events, readStreams }, done) => {
   done();
 }) as FastifyPluginCallback<{
   events: ImmutableEventEmitter;
-  readStreams: StreamRegistry<ReadStream>;
+  readStreams: StreamRegistry<Readable>;
 }>;

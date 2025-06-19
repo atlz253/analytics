@@ -9,8 +9,12 @@ describe("Создание отчетов", async () => {
   const url = (...parts: string[]) =>
     urlJoin("http://localhost:3000", ...parts);
 
-  const createUserEvents = (events: UserActivityEvent[]) =>
-    post(url("event", "create_multiple"), { body: JSON.stringify(events) });
+  const createUserEvents = async (events: UserActivityEvent[]) =>
+    expect(
+      await post(url("event", "create_multiple"), {
+        body: JSON.stringify(events),
+      })
+    ).toEqual({ statusCode: 200 });
 
   beforeEach(async () => {
     await post(url("event/drop_database"), { body: JSON.stringify({}) });

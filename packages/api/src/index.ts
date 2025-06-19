@@ -5,7 +5,7 @@ import reportRoute from "./routes/report.js";
 import { ImmutableEventEmitter } from "../../shared/src/ImmutableEventEmitter.js";
 import archiveRoute from "./routes/archive.js";
 import { StreamRegistry } from "../../shared/src/StreamRegistry.js";
-import { ReadStream } from "node:fs";
+import { Readable } from "node:stream";
 
 export class API {
   #port;
@@ -27,7 +27,7 @@ export class API {
     port,
   }: {
     events: ImmutableEventEmitter;
-    readStreams: StreamRegistry<ReadStream>;
+    readStreams: StreamRegistry<Readable>;
     logger?: boolean;
     port?: number;
   }) {
