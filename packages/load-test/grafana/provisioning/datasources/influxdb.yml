@@ -1,0 +1,17 @@
+# Файл: grafana/provisioning/datasources/influxdb.yml
+apiVersion: 1
+
+datasources:
+  - name: InfluxDB
+    type: influxdb
+    access: proxy
+    url: http://influxdb:8086
+    isDefault: true
+    editable: true
+    jsonData:
+      version: Flux
+      organization: k6-organization
+      defaultBucket: k6
+      tlsSkipVerify: true
+    secureJsonData:
+      token: my-super-secret-auth-token

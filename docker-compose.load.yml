@@ -1,0 +1,65 @@
+version: "3.8"
+
+services:
+  influxdb:
+    image: influxdb:2.7
+    container_name: influxdb
+    ports:
+      - "8086:8086"
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=admin
+      - DOCKER_INFLUXDB_INIT_PASSWORD=admin123456
+      - DOCKER_INFLUXDB_INIT_ORG=k6-organization
+      - DOCKER_INFLUXDB_INIT_BUCKET=k6
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=my-super-secret-auth-token
+    volumes:
+      - influxdb_data:/var/lib/influxdb2
+      - influxdb_config:/etc/influxdb2
+    networks:
+      - k6-network
+
+  grafana:
+    image: grafana/grafana:12.0.2
+    container_name: grafana
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_INSTALL_PLUGINS=grafana-piechart-panel
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./packages/load-test/grafana/provisioning:/etc/grafana/provisioning
+      - ./packages/load-test/grafana/dashboards:/var/lib/grafana/dashboards
+    depends_on:
+      - influxdb
+    networks:
+      - k6-network
+
+  k6:
+    build:
+      dockerfile: Dockerfile.load.k6
+    container_name: k6
+    volumes:
+      - ./packages/load-test/k6:/scripts
+    environment:
+      - K6_INFLUXDB_ORGANIZATION=k6-organization
+      - K6_INFLUXDB_BUCKET=k6
+      - K6_INFLUXDB_TOKEN=my-super-secret-auth-token
+      - K6_INFLUXDB_ADDR=http://influxdb:8086
+    depends_on:
+      - influxdb
+    networks:
+      - k6-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+volumes:
+  influxdb_data:
+  influxdb_config:
+  grafana_data:
+
+networks:
+  k6-network:
+    driver: bridge
