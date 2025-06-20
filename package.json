@@ -15,6 +15,7 @@
     "test.load.run": "docker-compose -f docker-compose.load.yml run k6 run -o xk6-influxdb",
     "test.load.ping": "npm run test.load.up && npm run test.load.run -- /scripts/ping.js && npm run test.load.down",
     "test.load.event": "npm run test.load.up && npm run test.load.run -- /scripts/event.js && npm run test.load.down",
+    "test.load.archive": "npm run test.load.up && npm run test.load.run -- /scripts/archive.js && npm run test.load.down",
     "monolith.start": "npm start --workspace=packages/monolith",
     "monolith.build": "npm run build --workspace=packages/monolith",
     "monolith.develop": "npm run develop --workspace=packages/monolith",
