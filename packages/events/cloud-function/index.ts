@@ -11,10 +11,14 @@ export const handler: Handler.Http = async (event, context) => {
       options: {
         tls: true,
         tlsCAFile: await tlsCAFile(),
-        authSource: "db1",
+        authSource: "events",
       },
     },
   });
-  await events.createEvent(event.body as never as UserActivityEvent);
+  const body = event.body as never as UserActivityEvent;
+  await events.createEvent({
+    ...body,
+    occurrenceTime: new Date(body.occurrenceTime),
+  });
   return { statusCode: 200 };
 };
