@@ -2,5 +2,8 @@
   "name": "ping",
   "type": "module",
   "version": "1.0.0",
-  "main": "src/index.ts"
+  "main": "src/index.ts",
+  "scripts": {
+    "serverless.build": "tsx cloud-function/esbuild.ts && node ../../scripts/zip.cjs ./dist/cloud-function/index.zip ./dist/cloud-function/index.js"
+  }
 }

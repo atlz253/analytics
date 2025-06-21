@@ -2,11 +2,5 @@
   "name": "archive",
   "type": "module",
   "version": "1.0.0",
-  "main": "src/index.ts",
-  "dependencies": {
-    "archiver": "^7.0.1"
-  },
-  "devDependencies": {
-    "@types/archiver": "^6.0.3"
-  }
+  "main": "src/index.ts"
 }
