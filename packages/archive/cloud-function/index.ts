@@ -19,13 +19,7 @@ const initArchive = async (): Promise<Archive> => {
   return archive({
     events,
     storage: {
-      type: "mongo",
-      host: "mongodb://user2:12345678@rc1b-uumhquflh32vru1k.mdb.yandexcloud.net:27018/",
-      options: {
-        tls: true,
-        tlsCAFile: await tlsCAFile(),
-        authSource: "archive",
-      },
+      type: "YS3",
     },
   });
 };
@@ -38,6 +32,6 @@ export const handler: Handler.Http = async (event, context) => {
   );
   return {
     statusCode: 200,
-    archiveURL: uuid,
+    archiveURL: `https://storage.yandexcloud.net/events-archives/events/${uuid}.zip`,
   };
 };

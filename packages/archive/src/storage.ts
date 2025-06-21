@@ -4,6 +4,11 @@ import { copyFile, mkdir } from "node:fs/promises";
 import { createReadStream, statSync } from "node:fs";
 import { Db, GridFSBucket, MongoClient, MongoClientOptions } from "mongodb";
 import { Readable } from "node:stream";
+import {
+  ObjectCannedACL,
+  PutObjectCommand,
+  S3Client,
+} from "@aws-sdk/client-s3";
 
 export abstract class Storage {
   abstract createEventsArchive(options: {
@@ -112,12 +117,47 @@ export class MongoStorage extends Storage {
   }
 }
 
+export class YandexObjectStorage extends Storage {
+  #client;
+
+  constructor({ client }: { client: S3Client }) {
+    super();
+    this.#client = client;
+  }
+
+  async createEventsArchive({
+    uuid,
+    path,
+  }: {
+    uuid: string;
+    path: string;
+  }): Promise<void> {
+    const command = new PutObjectCommand({
+      Bucket: "events-archives",
+      Key: `events/${uuid}.zip`,
+      Body: createReadStream(path),
+      ACL: ObjectCannedACL.public_read,
+    });
+    await this.#client.send(command);
+  }
+
+  readEventsArchive(options: {
+    archiveUUID: string;
+  }): Promise<Readable | undefined> {
+    throw new Error("Method not implemented.");
+  }
+
+  dropDatabase(): Promise<void> {
+    throw new Error("Method not implemented.");
+  }
+}
+
 export async function storage({
   type,
   host,
   options,
 }: {
-  type: "RAM" | "mongo";
+  type: "RAM" | "mongo" | "YS3";
   host?: string;
   options?: MongoClientOptions;
 }) {
@@ -131,5 +171,15 @@ export async function storage({
       );
       await client.connect();
       return new MongoStorage({ db: client.db("archive") });
+    case "YS3":
+      const s3Client = new S3Client({
+        endpoint: "https://storage.yandexcloud.net",
+        credentials: {
+          accessKeyId: "YCAJE8Cg_5A5fnSON4hm3GzJD", // Replace with your access key
+          secretAccessKey: "YCPOn8nx_EZvVGPB9_i_TmYf7v1RZ73OCO2UBzIP", // Replace with your secret key
+        },
+        region: "ru-central1", // Specify your region if required
+      });
+      return new YandexObjectStorage({ client: s3Client });
   }
 }

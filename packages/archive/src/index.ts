@@ -80,7 +80,7 @@ export async function initArchive({
 }: {
   events: AbstractEvents;
   storage: {
-    type: "RAM" | "mongo";
+    type: "RAM" | "mongo" | "YS3";
     host?: string;
     options?: MongoClientOptions;
   };
