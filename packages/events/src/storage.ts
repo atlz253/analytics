@@ -1,4 +1,4 @@
-import { Db, MongoClient } from "mongodb";
+import { Db, MongoClient, MongoClientOptions } from "mongodb";
 import { UserActivityEvent } from "./types.js";
 import { TimeInterval } from "../../shared/src/types/timeInterval.js";
 
@@ -124,16 +124,22 @@ class MongoStorage extends Storage {
   }
 }
 
-export type StorageOptions =
-  | (RAMStorageOptions & { type: "RAM" })
-  | { type: "mongo" };
+export interface StorageOptions {
+  type: "RAM" | "mongo";
+  host?: string;
+  storage?: RAMStorageObject;
+  options?: MongoClientOptions;
+}
 
 export async function storage({ type, ...options }: StorageOptions) {
   switch (type) {
     case "RAM":
       return new RAMStorage(options);
     case "mongo":
-      const client = new MongoClient("mongodb://root:example@mongodb:27017/");
+      const client = new MongoClient(
+        options.host ?? "mongodb://root:example@mongodb:27017/",
+        options.options
+      );
       await client.connect();
       return new MongoStorage({ db: client.db("events") });
   }
