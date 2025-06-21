@@ -30,7 +30,8 @@
     "monolith.docker.release.detach": "docker-compose -f docker-compose.monolith.release.yml up -d",
     "ping.serverless.build": "npm run serverless.build --workspace=packages/ping",
     "events.serverless.build": "npm run serverless.build --workspace=packages/events",
-    "report.serverless.build": "npm run serverless.build --workspace=packages/report"
+    "report.serverless.build": "npm run serverless.build --workspace=packages/report",
+    "archive.serverless.build": "npm run serverless.build --workspace=packages/archive"
   },
   "author": "Fedor Alekseev",
   "license": "MIT",

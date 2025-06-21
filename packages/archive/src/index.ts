@@ -6,6 +6,7 @@ import { zipJSON } from "./archive.js";
 import { storage as initStorage } from "./storage.js";
 import { Readable } from "node:stream";
 import { AbstractEvents } from "../../events/src/index.js";
+import { MongoClientOptions } from "mongodb";
 
 export abstract class AbstractArchive {
   abstract createEventsArchive(options: {
@@ -78,7 +79,11 @@ export async function initArchive({
   storage,
 }: {
   events: AbstractEvents;
-  storage: { type: "RAM" | "mongo" };
+  storage: {
+    type: "RAM" | "mongo";
+    host?: string;
+    options?: MongoClientOptions;
+  };
 }) {
   return new Archive({
     events,

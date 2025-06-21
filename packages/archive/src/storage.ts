@@ -2,7 +2,7 @@ import { tmpdir } from "node:os";
 import { basename, join } from "node:path";
 import { copyFile, mkdir } from "node:fs/promises";
 import { createReadStream, statSync } from "node:fs";
-import { Db, GridFSBucket, MongoClient } from "mongodb";
+import { Db, GridFSBucket, MongoClient, MongoClientOptions } from "mongodb";
 import { Readable } from "node:stream";
 
 export abstract class Storage {
@@ -112,12 +112,23 @@ export class MongoStorage extends Storage {
   }
 }
 
-export async function storage({ type }: { type: "RAM" | "mongo" }) {
+export async function storage({
+  type,
+  host,
+  options,
+}: {
+  type: "RAM" | "mongo";
+  host?: string;
+  options?: MongoClientOptions;
+}) {
   switch (type) {
     case "RAM":
       return new RAMStorage();
     case "mongo":
-      const client = new MongoClient("mongodb://root:example@mongodb:27017/");
+      const client = new MongoClient(
+        host ?? "mongodb://root:example@mongodb:27017/",
+        options
+      );
       await client.connect();
       return new MongoStorage({ db: client.db("archive") });
   }
