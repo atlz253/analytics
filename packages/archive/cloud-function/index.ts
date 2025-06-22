@@ -1,10 +1,10 @@
 import { Handler } from "@yandex-cloud/function-types";
 import { initEvents } from "../../events/src/index.js";
 import { tlsCAFile } from "../../shared/src/cloud-function/tlsCAFile.js";
-import { Archive, initArchive as archive } from "../src/index.js";
+import { AbstractArchive, initArchive as archive } from "../src/index.js";
 import { TimeInterval } from "../../shared/src/types/timeInterval.js";
 
-const initArchive = async (): Promise<Archive> => {
+const initArchive = async (): Promise<AbstractArchive> => {
   const events = await initEvents({
     storage: {
       type: "mongo",
