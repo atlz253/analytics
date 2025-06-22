@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node dist/index.cjs",
     "build": "tsx scripts/esbuild.ts",
+    "build.yandex": "tsx scripts/esbuild.yandex.ts",
     "develop": "tsx watch src/index.ts"
   }
 }
