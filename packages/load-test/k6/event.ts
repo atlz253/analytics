@@ -6,9 +6,14 @@ faker.seed(27);
 
 export let options = {
   stages: [
-    { duration: "5m", target: 1000 },
-    { duration: "5m", target: 1500 },
-    { duration: "5m", target: 0 },
+    { duration: "2m", target: 500 },
+    { duration: "5m", target: 500 },
+    { duration: "2m", target: 1000 },
+    { duration: "5m", target: 1250 },
+    { duration: "7m", target: 1500 },
+    { duration: "2m", target: 500 },
+    { duration: "5m", target: 500 },
+    { duration: "2m", target: 0 },
   ],
   thresholds: {
     http_req_duration: ["p(95)<500"], // 95% запросов должны выполняться менее чем за 500 мс
