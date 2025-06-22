@@ -15,6 +15,7 @@ import { tlsCAFile } from "../../shared/src/cloud-function/tlsCAFile.js";
         authSource: "events",
       },
     },
+    cloudFunction: true,
   });
   const report = new CloudFunctionReport({ fallback: new Report({ events }) });
   const archive = await initArchive({
