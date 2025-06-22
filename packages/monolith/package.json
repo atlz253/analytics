@@ -7,6 +7,7 @@
     "start": "node dist/index.cjs",
     "build": "tsx scripts/esbuild.ts",
     "build.yandex": "tsx scripts/esbuild.yandex.ts",
+    "build.yandex.serverless": "tsx scripts/esbuild.yandex.serverless.ts",
     "develop": "tsx watch src/index.ts"
   }
 }

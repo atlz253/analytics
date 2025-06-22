@@ -74,9 +74,54 @@ export class Archive extends AbstractArchive {
   }
 }
 
+class CloudFunctionArchive extends AbstractArchive {
+  #fallback;
+
+  constructor({ fallback }: { fallback: AbstractArchive }) {
+    super();
+    this.#fallback = fallback;
+  }
+
+  async createEventsArchive(options: {
+    timeInterval: TimeInterval;
+  }): Promise<string> {
+    try {
+      const response = await fetch(
+        "https://d5dabihqt2mj59hvr4c0.svoluuab.apigw.yandexcloud.net/archive/events",
+        {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+          },
+          body: JSON.stringify({
+            timeInterval: { start: "2020-01-01" },
+          }),
+        }
+      );
+      const json = await response.json();
+      const pathParts = new URL(json.archiveURL).pathname.split("/");
+      return pathParts[pathParts.length - 1].replace(".zip", "");
+    } catch (error) {
+      console.warn("Вызов Cloud Function закончился неудачей:", error);
+      return await this.#fallback.createEventsArchive(options);
+    }
+  }
+
+  readEventsArchive(options: {
+    archiveUUID: string;
+  }): Promise<Readable | undefined> {
+    return this.#fallback.readEventsArchive(options);
+  }
+
+  async dropDatabase(): Promise<void> {
+    await this.#fallback.dropDatabase();
+  }
+}
+
 export async function initArchive({
   events,
   storage,
+  cloudFunction,
 }: {
   events: AbstractEvents;
   storage: {
@@ -84,9 +129,13 @@ export async function initArchive({
     host?: string;
     options?: MongoClientOptions;
   };
+  cloudFunction?: boolean;
 }) {
-  return new Archive({
+  const archive = new Archive({
     events,
     storage: await initStorage(storage),
   });
+  return cloudFunction
+    ? new CloudFunctionArchive({ fallback: archive })
+    : archive;
 }

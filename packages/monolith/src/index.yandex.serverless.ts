@@ -22,10 +22,15 @@ import { tlsCAFile } from "../../shared/src/cloud-function/tlsCAFile.js";
     storage: {
       type: "YS3",
     },
+    cloudFunction: true,
   });
   const api = new API({
     events,
-    archive: { module: archive },
+    archive: {
+      module: archive,
+      archiveURL: ({ uuid }) =>
+        `https://storage.yandexcloud.net/events-archives/events/${uuid}.zip`,
+    },
     report,
     logger: true,
     port: 3000,

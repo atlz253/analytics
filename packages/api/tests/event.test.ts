@@ -13,7 +13,7 @@ describe("/event", async () => {
   let api = new API({
     events,
     report: new ReportMock(),
-    archive: new ArchiveMock(),
+    archive: { module: new ArchiveMock() },
   });
 
   const url = () => localhost(api.port) + "/event";
@@ -23,7 +23,7 @@ describe("/event", async () => {
     api = new API({
       events,
       report: new ReportMock(),
-      archive: new ArchiveMock(),
+      archive: { module: new ArchiveMock() },
     });
     await api.listen();
   });

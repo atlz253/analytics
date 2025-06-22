@@ -2,8 +2,7 @@ import Fastify from "fastify";
 import pingRoute from "./routes/ping.js";
 import eventRoute from "./routes/event.js";
 import reportRoute from "./routes/report.js";
-import archiveRoute from "./routes/archive.js";
-import { AbstractArchive } from "../../archive/src/index.js";
+import archiveRoute, { ArchiveRouteOptions } from "./routes/archive.js";
 import { Ping } from "../../ping/src/index.js";
 import { AbstractReport } from "../../report/src/index.js";
 import { AbstractEvents } from "../../events/src/index.js";
@@ -30,7 +29,7 @@ export class API {
     port,
   }: {
     events: AbstractEvents;
-    archive: AbstractArchive;
+    archive: ArchiveRouteOptions;
     report: AbstractReport;
     ping?: Ping;
     logger?: boolean;
@@ -42,7 +41,7 @@ export class API {
     this.#fastify.register(reportRoute, { report, prefix: "/report" });
     this.#fastify.register(pingRoute, { ping, prefix: "/ping" });
     this.#fastify.register(archiveRoute, {
-      archive,
+      ...archive,
       prefix: "/archive",
     });
   }

@@ -1,10 +1,15 @@
-import { FastifyPluginCallback } from "fastify";
+import { FastifyPluginCallback, FastifyRequest } from "fastify";
 import timeIntervalSchema from "../schemas/timeIntervalSchema.js";
 import urlJoin from "url-join";
 import { AbstractArchive } from "../../../archive/src/index.js";
 import { TimeInterval } from "../../../shared/src/types/timeInterval.js";
 
-export default ((fastify, { archive }, done) => {
+export interface ArchiveRouteOptions {
+  module: AbstractArchive;
+  archiveURL?: (options: { request: FastifyRequest; uuid: string }) => string;
+}
+
+export default ((fastify, { module: archive, archiveURL }, done) => {
   fastify.route<{ Body: { timeInterval: TimeInterval } }>({
     method: "POST",
     url: "/events",
@@ -21,12 +26,14 @@ export default ((fastify, { archive }, done) => {
       const archiveUUID = await archive.createEventsArchive(request.body);
       return {
         statusCode: 200,
-        archiveURL: urlJoin(
-          `${request.protocol}://`,
-          request.host,
-          request.url,
-          archiveUUID
-        ),
+        archiveURL: archiveURL
+          ? archiveURL({ request, uuid: archiveUUID })
+          : urlJoin(
+              `${request.protocol}://`,
+              request.host,
+              request.url,
+              archiveUUID
+            ),
       };
     },
   });
@@ -79,4 +86,4 @@ export default ((fastify, { archive }, done) => {
   });
 
   done();
-}) as FastifyPluginCallback<{ archive: AbstractArchive }>;
+}) as FastifyPluginCallback<ArchiveRouteOptions>;

@@ -20,7 +20,11 @@ describe("/archive", async () => {
     events,
     storage: { type: "RAM" },
   });
-  let api = new API({ events, archive, report: new ReportMock() });
+  let api = new API({
+    events,
+    archive: { module: archive },
+    report: new ReportMock(),
+  });
 
   const url = (...parts: Array<string>) =>
     urlJoin(localhost(api.port), "archive", ...parts);
@@ -31,7 +35,11 @@ describe("/archive", async () => {
       events,
       storage: { type: "RAM" },
     });
-    api = new API({ events, archive, report: new ReportMock() });
+    api = new API({
+      events,
+      archive: { module: archive },
+      report: new ReportMock(),
+    });
     await api.listen();
   });
 

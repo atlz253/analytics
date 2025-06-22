@@ -9,14 +9,14 @@ import { EventsMock } from "../../events/src/index.js";
 describe("/ping", () => {
   let api = new API({
     events: new EventsMock(),
-    archive: new ArchiveMock(),
+    archive: { module: new ArchiveMock() },
     report: new ReportMock(),
   });
 
   beforeEach(async () => {
     api = new API({
       events: new EventsMock(),
-      archive: new ArchiveMock(),
+      archive: { module: new ArchiveMock() },
       report: new ReportMock(),
     });
     new Ping();

@@ -1,0 +1,9 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.monolith.release.yandex.serverless
+    container_name: analytics-app
+    restart: unless-stopped
+    ports:
+      - 3000:3000

@@ -7,7 +7,13 @@ import { initArchive } from "../../archive/src/index.js";
   const events = await initEvents({ storage: { type: "mongo" } });
   const report = new Report({ events });
   const archive = await initArchive({ events, storage: { type: "mongo" } });
-  const api = new API({ events, archive, report, logger: true, port: 3000 });
+  const api = new API({
+    events,
+    archive: { module: archive },
+    report,
+    logger: true,
+    port: 3000,
+  });
   await api.listen();
   console.log(`API доступен по адресу: http://localhost:${api.port}`);
 })();

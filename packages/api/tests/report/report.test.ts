@@ -6,7 +6,6 @@ import urlJoin from "url-join";
 import fastify from "../utils/fastify.js";
 import { initEvents as initEvents } from "../../../events/src/index.js";
 import { post } from "../utils/fetch.js";
-import { UserActivityEvent } from "events/src/types.js";
 import mock from "./mock.js";
 import { omit } from "ramda";
 import { ArchiveMock } from "../../../archive/src/index.js";
@@ -14,7 +13,7 @@ import { ArchiveMock } from "../../../archive/src/index.js";
 describe("/report", async () => {
   let events = await initEvents({ storage: { type: "RAM" } });
   let report = new Report({ events });
-  let api = new API({ events, report, archive: new ArchiveMock() });
+  let api = new API({ events, report, archive: { module: new ArchiveMock() } });
 
   const url = (...parts: string[]) =>
     urlJoin(localhost(api.port), "/report", ...parts);
@@ -29,7 +28,7 @@ describe("/report", async () => {
   beforeEach(async () => {
     events = await initEvents({ storage: { type: "RAM" } });
     report = new Report({ events });
-    api = new API({ events, report, archive: new ArchiveMock() });
+    api = new API({ events, report, archive: { module: new ArchiveMock() } });
     await api.listen();
   });
 
