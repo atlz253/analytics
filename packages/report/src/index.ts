@@ -193,6 +193,7 @@ export class CloudFunctionReport extends AbstractReport {
         }
       );
       const json = await response.json();
+      if (json.errorCode) throw new Error(JSON.stringify(json));
       return omit(["statusCode"], json) as Array<UserActivityEvent>;
     } catch (error) {
       console.warn("Вызов Cloud Function закончился неудачей:", error);

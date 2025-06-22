@@ -91,13 +91,18 @@ class CloudFunctionEvents extends AbstractEvents {
 
   async createEvent(event: UserActivityEvent): Promise<void> {
     try {
-      await fetch("https://functions.yandexcloud.net/d4e6k9suiftpt7s9ru3g", {
-        method: "POST",
-        headers: {
-          "content-type": "application/json",
-        },
-        body: JSON.stringify(event),
-      });
+      const response = await fetch(
+        "https://functions.yandexcloud.net/d4e6k9suiftpt7s9ru3g",
+        {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+          },
+          body: JSON.stringify(event),
+        }
+      );
+      const json = await response.json();
+      if (json.errorCode) throw new Error(JSON.stringify(json));
     } catch (error) {
       console.warn("Вызов Cloud Function закончился неудачей:", error);
       await this.#fallback.createEvent(event);

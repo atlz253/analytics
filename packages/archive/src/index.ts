@@ -97,6 +97,7 @@ class CloudFunctionArchive extends AbstractArchive {
         }
       );
       const json = await response.json();
+      if (json.errorCode) throw new Error(JSON.stringify(json));
       const pathParts = new URL(json.archiveURL).pathname.split("/");
       return pathParts[pathParts.length - 1].replace(".zip", "");
     } catch (error) {
