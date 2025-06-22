@@ -2,6 +2,7 @@ import { TimeInterval } from "../../shared/src/types/timeInterval.js";
 import { UserActivityEvent } from "events/src/types.js";
 import { EventTypesReport, UserReport, UsersReport } from "./types.js";
 import { AbstractEvents } from "../../events/src/index.js";
+import { omit } from "ramda";
 
 export abstract class AbstractReport {
   abstract createUsersReport(event: {
@@ -99,5 +100,103 @@ export class Report extends AbstractReport {
   async createEventsReport(options: { timeInterval: TimeInterval }) {
     const events = await this.#events.readEvents(options);
     return events;
+  }
+}
+
+export class CloudFunctionReport extends AbstractReport {
+  #fallback;
+
+  constructor({ fallback }: { fallback: AbstractReport }) {
+    super();
+    this.#fallback = fallback;
+  }
+
+  async createUsersReport(event: {
+    timeInterval: TimeInterval;
+  }): Promise<UsersReport> {
+    try {
+      const response = await fetch(
+        "https://d5dabihqt2mj59hvr4c0.svoluuab.apigw.yandexcloud.net/report/users",
+        {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+          },
+          body: JSON.stringify(event),
+        }
+      );
+      const json = await response.json();
+      return omit(["statusCode"], json);
+    } catch (error) {
+      console.warn("Вызов Cloud Function закончился неудачей:", error);
+      return await this.#fallback.createUsersReport(event);
+    }
+  }
+
+  async createUserReport(event: {
+    userUUID: string;
+    timeInterval: TimeInterval;
+  }): Promise<UserReport> {
+    try {
+      const response = await fetch(
+        "https://d5dabihqt2mj59hvr4c0.svoluuab.apigw.yandexcloud.net/report/user",
+        {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+          },
+          body: JSON.stringify(event),
+        }
+      );
+      const json = await response.json();
+      return omit(["statusCode"], json) as UserReport;
+    } catch (error) {
+      console.warn("Вызов Cloud Function закончился неудачей:", error);
+      return await this.#fallback.createUserReport(event);
+    }
+  }
+
+  async createEventTypesReport(event: {
+    timeInterval: TimeInterval;
+  }): Promise<EventTypesReport> {
+    try {
+      const response = await fetch(
+        "https://d5dabihqt2mj59hvr4c0.svoluuab.apigw.yandexcloud.net/report/eventTypes",
+        {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+          },
+          body: JSON.stringify(event),
+        }
+      );
+      const json = await response.json();
+      return omit(["statusCode"], json) as EventTypesReport;
+    } catch (error) {
+      console.warn("Вызов Cloud Function закончился неудачей:", error);
+      return await this.#fallback.createEventTypesReport(event);
+    }
+  }
+
+  async createEventsReport(event: {
+    timeInterval: TimeInterval;
+  }): Promise<Array<UserActivityEvent>> {
+    try {
+      const response = await fetch(
+        "https://d5dabihqt2mj59hvr4c0.svoluuab.apigw.yandexcloud.net/report/events",
+        {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+          },
+          body: JSON.stringify(event),
+        }
+      );
+      const json = await response.json();
+      return omit(["statusCode"], json) as Array<UserActivityEvent>;
+    } catch (error) {
+      console.warn("Вызов Cloud Function закончился неудачей:", error);
+      return await this.#fallback.createEventsReport(event);
+    }
   }
 }

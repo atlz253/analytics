@@ -1,6 +1,6 @@
 import { API } from "../../api/src/index.js";
 import { initEvents } from "../../events/src/index.js";
-import { Report } from "../../report/src/index.js";
+import { CloudFunctionReport, Report } from "../../report/src/index.js";
 import { initArchive } from "../../archive/src/index.js";
 import { tlsCAFile } from "../../shared/src/cloud-function/tlsCAFile.js";
 
@@ -16,7 +16,7 @@ import { tlsCAFile } from "../../shared/src/cloud-function/tlsCAFile.js";
       },
     },
   });
-  const report = new Report({ events });
+  const report = new CloudFunctionReport({ fallback: new Report({ events }) });
   const archive = await initArchive({
     events,
     storage: {
