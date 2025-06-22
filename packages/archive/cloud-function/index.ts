@@ -28,7 +28,7 @@ const initArchive = async (): Promise<Archive> => {
 export const handler: Handler.Http = async (event, context) => {
   const archive = await initArchive();
   const uuid = await archive.createEventsArchive(
-    event.body as unknown as { timeInterval: TimeInterval }
+    JSON.parse(event.body) as { timeInterval: TimeInterval }
   );
   return {
     statusCode: 200,

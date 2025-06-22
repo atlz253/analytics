@@ -15,7 +15,7 @@ export const handler: Handler.Http = async (event, context) => {
       },
     },
   });
-  const body = event.body as never as UserActivityEvent;
+  const body = JSON.parse(event.body) as UserActivityEvent;
   await events.createEvent({
     ...body,
     occurrenceTime: new Date(body.occurrenceTime),
