@@ -93,9 +93,7 @@ class CloudFunctionArchive extends AbstractArchive {
           headers: {
             "content-type": "application/json",
           },
-          body: JSON.stringify({
-            timeInterval: { start: "2020-01-01" },
-          }),
+          body: JSON.stringify(options),
         }
       );
       const json = await response.json();
