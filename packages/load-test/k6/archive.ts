@@ -6,9 +6,14 @@ faker.seed(27);
 
 export let options = {
   stages: [
-    { duration: "5m", target: 1000 }, // Разогрев до 1000 пользователей за 5 минут
-    { duration: "5m", target: 1500 }, // Пик нагрузки 1500 пользователей за 5 минут
-    { duration: "5m", target: 0 }, // Снижение до 0 за 5 минут
+    { duration: "2m", target: 500 },
+    { duration: "5m", target: 500 },
+    { duration: "2m", target: 1000 },
+    { duration: "5m", target: 1250 },
+    { duration: "7m", target: 1500 },
+    { duration: "2m", target: 500 },
+    { duration: "5m", target: 500 },
+    { duration: "2m", target: 0 },
   ],
   thresholds: {
     "http_req_duration{endpoint:event}": ["p(95)<500"],
