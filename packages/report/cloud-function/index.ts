@@ -24,9 +24,13 @@ export const users: Handler.Http = async (event, context) => {
   const report = await initReport();
   return {
     statusCode: 200,
-    users: await report.createUsersReport(
-      event.body as never as { timeInterval: TimeInterval }
-    ),
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      statusCode: 200,
+      users: await report.createUsersReport(
+        event.body as never as { timeInterval: TimeInterval }
+      ),
+    }),
   };
 };
 
@@ -34,9 +38,13 @@ export const user: Handler.Http = async (event, context) => {
   const report = await initReport();
   return {
     statusCode: 200,
-    ...(await report.createUserReport(
-      event.body as never as { timeInterval: TimeInterval; userUUID: string }
-    )),
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      statusCode: 200,
+      user: await report.createUserReport(
+        event.body as never as { timeInterval: TimeInterval; userUUID: string }
+      ),
+    }),
   };
 };
 
@@ -44,9 +52,13 @@ export const eventTypes: Handler.Http = async (event, context) => {
   const report = await initReport();
   return {
     statusCode: 200,
-    ...(await report.createEventTypesReport(
-      event.body as never as { timeInterval: TimeInterval }
-    )),
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      statusCode: 200,
+      ...(await report.createEventTypesReport(
+        event.body as never as { timeInterval: TimeInterval }
+      )),
+    }),
   };
 };
 
@@ -54,8 +66,12 @@ export const events: Handler.Http = async (event, context) => {
   const report = await initReport();
   return {
     statusCode: 200,
-    events: await report.createEventsReport(
-      event.body as never as { timeInterval: TimeInterval }
-    ),
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      statusCode: 200,
+      events: await report.createEventsReport(
+        event.body as never as { timeInterval: TimeInterval }
+      ),
+    }),
   };
 };

@@ -20,5 +20,9 @@ export const handler: Handler.Http = async (event, context) => {
     ...body,
     occurrenceTime: new Date(body.occurrenceTime),
   });
-  return { statusCode: 200 };
+  return {
+    statusCode: 200,
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ statusCode: 200 }),
+  };
 };

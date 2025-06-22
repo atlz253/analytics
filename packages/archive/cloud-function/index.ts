@@ -32,6 +32,10 @@ export const handler: Handler.Http = async (event, context) => {
   );
   return {
     statusCode: 200,
-    archiveURL: `https://storage.yandexcloud.net/events-archives/events/${uuid}.zip`,
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      statusCode: 200,
+      archiveURL: `https://storage.yandexcloud.net/events-archives/events/${uuid}.zip`,
+    }),
   };
 };
