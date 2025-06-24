@@ -172,13 +172,14 @@ export async function storage({
       await client.connect();
       return new MongoStorage({ db: client.db("archive") });
     case "YS3":
+      // TODO: пробрасывать значения через конфиги
       const s3Client = new S3Client({
         endpoint: "https://storage.yandexcloud.net",
         credentials: {
-          accessKeyId: "YCAJE8Cg_5A5fnSON4hm3GzJD", // Replace with your access key
-          secretAccessKey: "YCPOn8nx_EZvVGPB9_i_TmYf7v1RZ73OCO2UBzIP", // Replace with your secret key
+          accessKeyId: "YCAJE8Cg_5A5fnSON4hm3GzJD",
+          secretAccessKey: "YCPOn8nx_EZvVGPB9_i_TmYf7v1RZ73OCO2UBzIP",
         },
-        region: "ru-central1", // Specify your region if required
+        region: "ru-central1",
       });
       return new YandexObjectStorage({ client: s3Client });
   }
