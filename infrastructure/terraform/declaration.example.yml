@@ -1,0 +1,7 @@
+spec:
+  containers:
+    - image: <имя Docker-образа>
+      securityContext:
+        privileged: false
+      stdin: false
+      tty: false
