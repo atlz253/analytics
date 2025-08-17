@@ -9,5 +9,9 @@
     "build.yandex": "tsx scripts/esbuild.yandex.ts",
     "build.yandex.serverless": "tsx scripts/esbuild.yandex.serverless.ts",
     "develop": "tsx watch src/index.ts"
+  },
+  "dependencies": {
+    "@atlz253/frontier": "^0.0.4",
+    "dotenv": "^17.2.1"
   }
 }

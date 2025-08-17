@@ -59,6 +59,7 @@
   "dependencies": {
     "archiver": "^7.0.1",
     "mongodb": "^6.17.0",
-    "ramda": "^0.30.1"
+    "ramda": "^0.30.1",
+    "zod": "^4.0.17"
   }
 }

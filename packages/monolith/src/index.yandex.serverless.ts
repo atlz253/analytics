@@ -1,22 +1,29 @@
 import { API } from "../../api/src/index.js";
-import { initEvents } from "../../events/src/index.js";
+import { AbstractEvents } from "../../events/src/index.js";
 import { CloudFunctionReport, Report } from "../../report/src/index.js";
 import { initArchive } from "../../archive/src/index.js";
-import { tlsCAFile } from "../../shared/src/cloud-function/tlsCAFile.js";
+import { Builder } from "@atlz253/frontier";
+import developConfig from "../config/frontier/develop.js";
+import yandexConfig from "../config/frontier/yandex.js";
+import serverlessYandexConfig from "../config/frontier/yandex.serverless.js";
+import dotenv from "dotenv";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 
 (async () => {
-  const events = await initEvents({
-    storage: {
-      type: "mongo",
-      host: "mongodb://user2:12345678@rc1b-uumhquflh32vru1k.mdb.yandexcloud.net:27018/",
-      options: {
-        tls: true,
-        tlsCAFile: await tlsCAFile(),
-        authSource: "events",
-      },
-    },
-    cloudFunction: true,
+  dotenv.config({
+    path: [".env.yandex.serverless", ".env.yandex", ".env"].map((f) =>
+      resolve(dirname(fileURLToPath(import.meta.url)), "..", f)
+    ),
   });
+  const modules = await new Builder().build(
+    ...(await Promise.all([
+      developConfig(),
+      yandexConfig(),
+      serverlessYandexConfig(),
+    ]))
+  );
+  const events = modules["events"] as AbstractEvents;
   const report = new CloudFunctionReport({ fallback: new Report({ events }) });
   const archive = await initArchive({
     events,

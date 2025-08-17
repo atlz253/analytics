@@ -1,6 +1,30 @@
 import { Db, MongoClient, MongoClientOptions } from "mongodb";
 import { UserActivityEvent } from "./types.js";
 import { TimeInterval } from "../../shared/src/types/timeInterval.js";
+import { z } from "zod";
+
+const RAMStorageOptionsSchema = z.object({
+  // TODO: убрать эту возможность
+  storage: z.custom<RAMStorageObject>().optional(),
+});
+type RAMStorageOptions = z.infer<typeof RAMStorageOptionsSchema>;
+
+const mongoStorageOptionsSchema = z.object({
+  user: z.string(),
+  password: z.string(),
+  hosts: z.string(),
+  port: z
+    .string()
+    .regex(/^\d+$/)
+    .transform((val) => parseInt(val)),
+  options: z.custom<MongoClientOptions>().optional(),
+});
+type MongoStorageOptions = z.infer<typeof mongoStorageOptionsSchema>;
+
+export const storageOptionsSchema = z.discriminatedUnion("type", [
+  RAMStorageOptionsSchema.extend({ type: z.literal("RAM") }),
+  mongoStorageOptionsSchema.extend({ type: z.literal("mongo") }),
+]);
 
 export type StorageType = "RAM" | "mongo";
 
@@ -19,13 +43,8 @@ export abstract class Storage {
   abstract drop(): Promise<void>;
 }
 
-interface RAMStorageObject {
+export interface RAMStorageObject {
   events: Array<UserActivityEvent>;
-}
-
-// TODO: убрать эту возможность
-interface RAMStorageOptions {
-  storage?: RAMStorageObject;
 }
 
 class RAMStorage extends Storage {
@@ -124,21 +143,24 @@ class MongoStorage extends Storage {
   }
 }
 
-export interface StorageOptions {
-  type: "RAM" | "mongo";
-  host?: string;
-  storage?: RAMStorageObject;
-  options?: MongoClientOptions;
-}
-
-export async function storage({ type, ...options }: StorageOptions) {
+export async function storage({
+  type,
+  ...options
+}: z.infer<typeof storageOptionsSchema>) {
   switch (type) {
     case "RAM":
-      return new RAMStorage(options);
+      return new RAMStorage(options as RAMStorageOptions);
     case "mongo":
+      const {
+        user,
+        password,
+        hosts,
+        port,
+        options: mongoOptions,
+      } = options as MongoStorageOptions;
       const client = new MongoClient(
-        options.host ?? "mongodb://root:example@mongodb:27017/",
-        options.options
+        `mongodb://${user}:${password}@${hosts}:${port}/`,
+        mongoOptions
       );
       await client.connect();
       return new MongoStorage({ db: client.db("events") });

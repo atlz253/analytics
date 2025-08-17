@@ -1,6 +1,12 @@
-import { storage as getStorage, Storage, StorageOptions } from "./storage.js";
+import { storage as getStorage, Storage, storageOptionsSchema } from "./storage.js";
 import { UserActivityEvent } from "./types.js";
 import { TimeInterval } from "../../shared/src/types/timeInterval.js";
+import { z } from "zod";
+
+export const configSchema = z.object({
+  cloudFunction: z.boolean().optional(),
+  storage: storageOptionsSchema,
+});
 
 export abstract class AbstractEvents {
   abstract createEvents(events: Array<UserActivityEvent>): Promise<void>;
@@ -127,10 +133,7 @@ class CloudFunctionEvents extends AbstractEvents {
 export async function initEvents({
   storage,
   cloudFunction,
-}: {
-  storage: StorageOptions;
-  cloudFunction?: boolean;
-}) {
+}: z.infer<typeof configSchema>) {
   const events = new Events({ storage: await getStorage(storage) });
   return cloudFunction ? new CloudFunctionEvents({ fallback: events }) : events;
 }
