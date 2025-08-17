@@ -1,6 +1,6 @@
 import { API } from "../../api/src/index.js";
 import { AbstractEvents } from "../../events/src/index.js";
-import { CloudFunctionReport, Report } from "../../report/src/index.js";
+import { AbstractReport } from "../../report/src/index.js";
 import { initArchive } from "../../archive/src/index.js";
 import { Builder } from "@atlz253/frontier";
 import developConfig from "../config/frontier/develop.js";
@@ -24,7 +24,7 @@ import { fileURLToPath } from "node:url";
     ]))
   );
   const events = modules["events"] as AbstractEvents;
-  const report = new CloudFunctionReport({ fallback: new Report({ events }) });
+  const report = modules["report"] as AbstractReport;
   const archive = await initArchive({
     events,
     storage: {

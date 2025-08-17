@@ -1,6 +1,6 @@
 import { API } from "../../api/src/index.js";
 import { AbstractEvents } from "../../events/src/index.js";
-import { Report } from "../../report/src/index.js";
+import { AbstractReport } from "../../report/src/index.js";
 import { initArchive } from "../../archive/src/index.js";
 import { Builder } from "@atlz253/frontier";
 import developConfig from "../config/frontier/develop.js";
@@ -18,7 +18,7 @@ import { fileURLToPath } from "node:url";
     ...(await Promise.all([developConfig()]))
   );
   const events = modules["events"] as AbstractEvents;
-  const report = new Report({ events });
+  const report = modules["report"] as AbstractReport;
   const archive = await initArchive({ events, storage: { type: "mongo" } });
   const api = new API({
     events,

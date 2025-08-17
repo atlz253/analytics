@@ -3,6 +3,7 @@ import {
   initEvents,
   configSchema as eventsConfigSchema,
 } from "../../../events/src/index.js";
+import { Report } from "../../../report/src/index.js";
 
 export default async (): Promise<BuildConfig> => ({
   modules: {
@@ -18,6 +19,11 @@ export default async (): Promise<BuildConfig> => ({
           port: process.env.EVENTS_STORAGE_MONGO_PORT,
         },
       }),
+    }),
+    report: defineModule({
+      builder: (...props: ConstructorParameters<typeof Report>) =>
+        new Report(...props),
+      dependencies: ["events"],
     }),
   },
 });

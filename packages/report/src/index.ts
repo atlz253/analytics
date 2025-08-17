@@ -53,7 +53,11 @@ export class ReportMock extends AbstractReport {
 export class Report extends AbstractReport {
   #events;
 
-  constructor({ events }: { events: AbstractEvents }) {
+  constructor({
+    dependencies: { events },
+  }: {
+    dependencies: { events: AbstractEvents };
+  }) {
     super();
     this.#events = events;
   }
@@ -106,7 +110,11 @@ export class Report extends AbstractReport {
 export class CloudFunctionReport extends AbstractReport {
   #fallback;
 
-  constructor({ fallback }: { fallback: AbstractReport }) {
+  constructor({
+    dependencies: { fallback },
+  }: {
+    dependencies: { fallback: AbstractReport };
+  }) {
     super();
     this.#fallback = fallback;
   }
@@ -115,7 +123,7 @@ export class CloudFunctionReport extends AbstractReport {
     timeInterval: TimeInterval;
   }): Promise<UsersReport> {
     try {
-      const response = await fetch(
+      const response = await fetch( // TODO: вынести хост в .env
         "https://d5dabihqt2mj59hvr4c0.svoluuab.apigw.yandexcloud.net/report/users",
         {
           method: "POST",
