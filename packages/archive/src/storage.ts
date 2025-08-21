@@ -9,6 +9,27 @@ import {
   PutObjectCommand,
   S3Client,
 } from "@aws-sdk/client-s3";
+import { z } from "zod";
+import {
+  MongoClientOptionsSchema,
+  mongoClientOptionsSchema,
+} from "../../shared/src/mongo.js";
+
+const yandexS3OptionsSchema = z.object({
+  region: z.string(),
+  credentials: z.object({
+    accessKeyId: z.string(),
+    secretAccessKey: z.string(),
+  }),
+});
+type YandexS3OptionsSchema = z.infer<typeof yandexS3OptionsSchema>;
+
+export const storageOptionsSchema = z.discriminatedUnion("type", [
+  z.object({ type: z.literal("RAM") }),
+  mongoClientOptionsSchema.extend({ type: z.literal("mongo") }),
+  yandexS3OptionsSchema.extend({ type: z.literal("YS3") }),
+]);
+type StorageOptionsSchema = z.infer<typeof storageOptionsSchema>;
 
 export abstract class Storage {
   abstract createEventsArchive(options: {
@@ -152,34 +173,31 @@ export class YandexObjectStorage extends Storage {
   }
 }
 
-export async function storage({
-  type,
-  host,
-  options,
-}: {
-  type: "RAM" | "mongo" | "YS3";
-  host?: string;
-  options?: MongoClientOptions;
-}) {
+export async function storage({ type, ...options }: StorageOptionsSchema) {
   switch (type) {
     case "RAM":
       return new RAMStorage();
     case "mongo":
+      const {
+        user,
+        password,
+        hosts,
+        port,
+        options: mongoOptions,
+      } = options as MongoClientOptionsSchema;
       const client = new MongoClient(
-        host ?? "mongodb://root:example@mongodb:27017/",
-        options
+        `mongodb://${user}:${password}@${hosts}:${port}/`,
+        mongoOptions
       );
       await client.connect();
       return new MongoStorage({ db: client.db("archive") });
     case "YS3":
+      const { region, credentials } = options as YandexS3OptionsSchema;
       // TODO: пробрасывать значения через конфиги
       const s3Client = new S3Client({
+        region,
+        credentials: { ...credentials },
         endpoint: "https://storage.yandexcloud.net",
-        credentials: {
-          accessKeyId: "YCAJE8Cg_5A5fnSON4hm3GzJD",
-          secretAccessKey: "YCPOn8nx_EZvVGPB9_i_TmYf7v1RZ73OCO2UBzIP",
-        },
-        region: "ru-central1",
       });
       return new YandexObjectStorage({ client: s3Client });
   }

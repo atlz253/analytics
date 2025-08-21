@@ -1,7 +1,11 @@
-import { Db, MongoClient, MongoClientOptions } from "mongodb";
+import { Db, MongoClient } from "mongodb";
 import { UserActivityEvent } from "./types.js";
 import { TimeInterval } from "../../shared/src/types/timeInterval.js";
 import { z } from "zod";
+import {
+  MongoClientOptionsSchema,
+  mongoClientOptionsSchema,
+} from "../../shared/src/mongo.js";
 
 const RAMStorageOptionsSchema = z.object({
   // TODO: убрать эту возможность
@@ -9,21 +13,9 @@ const RAMStorageOptionsSchema = z.object({
 });
 type RAMStorageOptions = z.infer<typeof RAMStorageOptionsSchema>;
 
-const mongoStorageOptionsSchema = z.object({
-  user: z.string(),
-  password: z.string(),
-  hosts: z.string(),
-  port: z
-    .string()
-    .regex(/^\d+$/)
-    .transform((val) => parseInt(val)),
-  options: z.custom<MongoClientOptions>().optional(),
-});
-type MongoStorageOptions = z.infer<typeof mongoStorageOptionsSchema>;
-
 export const storageOptionsSchema = z.discriminatedUnion("type", [
   RAMStorageOptionsSchema.extend({ type: z.literal("RAM") }),
-  mongoStorageOptionsSchema.extend({ type: z.literal("mongo") }),
+  mongoClientOptionsSchema.extend({ type: z.literal("mongo") }),
 ]);
 
 export type StorageType = "RAM" | "mongo";
@@ -157,7 +149,7 @@ export async function storage({
         hosts,
         port,
         options: mongoOptions,
-      } = options as MongoStorageOptions;
+      } = options as MongoClientOptionsSchema;
       const client = new MongoClient(
         `mongodb://${user}:${password}@${hosts}:${port}/`,
         mongoOptions

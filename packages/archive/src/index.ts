@@ -1,12 +1,18 @@
 import { TimeInterval } from "../../shared/src/types/timeInterval.js";
 import { randomUUID } from "node:crypto";
-import { Storage } from "./storage.js";
+import { Storage, storageOptionsSchema } from "./storage.js";
 import { unlink } from "node:fs/promises";
 import { zipJSON } from "./archive.js";
 import { storage as initStorage } from "./storage.js";
 import { Readable } from "node:stream";
 import { AbstractEvents } from "../../events/src/index.js";
-import { MongoClientOptions } from "mongodb";
+import { z } from "zod";
+
+export const configSchema = z.object({
+  storage: storageOptionsSchema,
+  cloudFunction: z.boolean().optional(),
+});
+type ConfigSchema = z.infer<typeof configSchema>;
 
 export abstract class AbstractArchive {
   abstract createEventsArchive(options: {
@@ -118,18 +124,10 @@ class CloudFunctionArchive extends AbstractArchive {
 }
 
 export async function initArchive({
-  events,
   storage,
   cloudFunction,
-}: {
-  events: AbstractEvents;
-  storage: {
-    type: "RAM" | "mongo" | "YS3";
-    host?: string;
-    options?: MongoClientOptions;
-  };
-  cloudFunction?: boolean;
-}) {
+  dependencies: { events },
+}: ConfigSchema & { dependencies: { events: AbstractEvents } }) {
   const archive = new Archive({
     events,
     storage: await initStorage(storage),

@@ -4,6 +4,10 @@ import {
   configSchema as eventsConfigSchema,
 } from "../../../events/src/index.js";
 import { Report } from "../../../report/src/index.js";
+import {
+  initArchive,
+  configSchema as archiveConfigSchema,
+} from "../../../archive/src/index.js";
 
 export default async (): Promise<BuildConfig> => ({
   modules: {
@@ -24,6 +28,26 @@ export default async (): Promise<BuildConfig> => ({
       builder: (...props: ConstructorParameters<typeof Report>) =>
         new Report(...props),
       dependencies: ["events"],
+    }),
+    archive: defineModule({
+      builder: (...props: Parameters<typeof initArchive>) =>
+        initArchive(...props),
+      arguments: archiveConfigSchema.parse({
+        cloudFunction: Boolean(process.env.ARCHIVE_CLOUD_FUNCTION),
+        storage: {
+          type: process.env.ARCHIVE_STORAGE_TYPE,
+          user: process.env.ARCHIVE_STORAGE_MONGO_USER,
+          password: process.env.ARCHIVE_STORAGE_MONGO_PASSWORD,
+          hosts: process.env.ARCHIVE_STORAGE_MONGO_HOSTS,
+          port: process.env.ARCHIVE_STORAGE_MONGO_PORT,
+          region: process.env.ARCHIVE_STORAGE_YS3_REGION,
+          credentials: {
+            accessKeyId: process.env.ARCHIVE_STORAGE_YS3_ACCESS_KEY_ID,
+            secretAccessKey: process.env.ARCHIVE_STORAGE_YS3_SECRET_ACCESS_KEY,
+          },
+        },
+      }),
+      dependencies: ["events"]
     }),
   },
 });

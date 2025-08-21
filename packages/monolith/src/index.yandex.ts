@@ -1,7 +1,7 @@
 import { API } from "../../api/src/index.js";
 import { AbstractEvents } from "../../events/src/index.js";
 import { AbstractReport } from "../../report/src/index.js";
-import { initArchive } from "../../archive/src/index.js";
+import { AbstractArchive } from "../../archive/src/index.js";
 import dotenv from "dotenv";
 import { resolve } from "node:path";
 import { Builder } from "@atlz253/frontier";
@@ -18,12 +18,7 @@ import { cwd } from "node:process";
   );
   const events = modules["events"] as AbstractEvents;
   const report = modules["report"] as AbstractReport;
-  const archive = await initArchive({
-    events,
-    storage: {
-      type: "YS3",
-    },
-  });
+  const archive = modules["archive"] as AbstractArchive;
   const api = new API({
     events,
     archive: { module: archive },
