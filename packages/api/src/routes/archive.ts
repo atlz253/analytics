@@ -1,15 +1,23 @@
-import { FastifyPluginCallback, FastifyRequest } from "fastify";
+import { FastifyPluginCallback } from "fastify";
 import timeIntervalSchema from "../schemas/timeIntervalSchema.js";
 import urlJoin from "url-join";
 import { AbstractArchive } from "../../../archive/src/index.js";
 import { TimeInterval } from "../../../shared/src/types/timeInterval.js";
+import { z } from "zod";
+import { functionSchema } from "../../../shared/src/zod.js";
+
+export const archiveURLFunction = z.function({
+  input: [z.object({ uuid: z.string() })],
+  output: z.string(),
+});
+export const archiveURLSchema = functionSchema(archiveURLFunction);
 
 export interface ArchiveRouteOptions {
   module: AbstractArchive;
-  archiveURL?: (options: { request: FastifyRequest; uuid: string }) => string;
+  url?: z.infer<typeof archiveURLSchema>;
 }
 
-export default ((fastify, { module: archive, archiveURL }, done) => {
+export default ((fastify, { module: archive, url }, done) => {
   fastify.route<{ Body: { timeInterval: TimeInterval } }>({
     method: "POST",
     url: "/events",
@@ -26,8 +34,8 @@ export default ((fastify, { module: archive, archiveURL }, done) => {
       const archiveUUID = await archive.createEventsArchive(request.body);
       return {
         statusCode: 200,
-        archiveURL: archiveURL
-          ? archiveURL({ request, uuid: archiveUUID })
+        archiveURL: url
+          ? url({ uuid: archiveUUID })
           : urlJoin(
               `${request.protocol}://`,
               request.host,

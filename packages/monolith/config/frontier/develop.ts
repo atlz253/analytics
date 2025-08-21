@@ -8,6 +8,11 @@ import {
   initArchive,
   configSchema as archiveConfigSchema,
 } from "../../../archive/src/index.js";
+import {
+  API,
+  configSchema as APIConfigSchema,
+} from "../../../api/src/index.js";
+import { Ping } from "../../../ping/src/index.js";
 
 export default async (): Promise<BuildConfig> => ({
   modules: {
@@ -47,7 +52,20 @@ export default async (): Promise<BuildConfig> => ({
           },
         },
       }),
-      dependencies: ["events"]
+      dependencies: ["events"],
+    }),
+    ping: defineModule({
+      builder: (...props: ConstructorParameters<typeof Ping>) =>
+        new Ping(...props),
+    }),
+    api: defineModule({
+      builder: (...props: ConstructorParameters<typeof API>) =>
+        new API(...props),
+      arguments: APIConfigSchema.parse({
+        logger: Boolean(process.env.API_LOGGER),
+        port: process.env.API_PORT,
+      }),
+      dependencies: ["events", "report", "archive", "ping"],
     }),
   },
 });

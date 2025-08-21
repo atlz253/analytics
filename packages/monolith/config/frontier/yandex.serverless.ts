@@ -1,6 +1,8 @@
 import { BuildConfig, defineModule } from "@atlz253/frontier";
 import { configSchema as eventsConfigSchema } from "../../../events/src/index.js";
 import { CloudFunctionReport } from "../../../report/src/index.js";
+import { configSchema as archiveConfigSchema } from "../../../archive/src/index.js";
+import { archiveURLFunction } from "../../../api/src/routes/archive.js";
 
 export default async (): Promise<BuildConfig> => ({
   modules: {
@@ -18,6 +20,16 @@ export default async (): Promise<BuildConfig> => ({
       builder: (...props: ConstructorParameters<typeof Report>) =>
         new Report(...props),
       dependencies: ["events"],
+    }),
+    archive: defineModule({
+      arguments: archiveConfigSchema.parse({
+        archive: {
+          url: archiveURLFunction.implement(
+            ({ uuid }: { uuid: string }) =>
+              `https://storage.yandexcloud.net/events-archives/events/${uuid}.zip`
+          ),
+        },
+      }),
     }),
   },
 });

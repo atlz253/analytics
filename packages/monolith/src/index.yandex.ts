@@ -1,7 +1,4 @@
 import { API } from "../../api/src/index.js";
-import { AbstractEvents } from "../../events/src/index.js";
-import { AbstractReport } from "../../report/src/index.js";
-import { AbstractArchive } from "../../archive/src/index.js";
 import dotenv from "dotenv";
 import { resolve } from "node:path";
 import { Builder } from "@atlz253/frontier";
@@ -16,16 +13,7 @@ import { cwd } from "node:process";
   const modules = await new Builder().build(
     ...(await Promise.all([developConfig(), yandexConfig()]))
   );
-  const events = modules["events"] as AbstractEvents;
-  const report = modules["report"] as AbstractReport;
-  const archive = modules["archive"] as AbstractArchive;
-  const api = new API({
-    events,
-    archive: { module: archive },
-    report,
-    logger: true,
-    port: 3000,
-  });
+  const api = modules["api"] as API;
   await api.listen();
   console.log(`API доступен по адресу: http://localhost:${api.port}`);
 })();

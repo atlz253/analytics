@@ -2,10 +2,24 @@ import Fastify from "fastify";
 import pingRoute from "./routes/ping.js";
 import eventRoute from "./routes/event.js";
 import reportRoute from "./routes/report.js";
-import archiveRoute, { ArchiveRouteOptions } from "./routes/archive.js";
+import archiveRoute, { archiveURLSchema } from "./routes/archive.js";
 import { Ping } from "../../ping/src/index.js";
 import { AbstractReport } from "../../report/src/index.js";
 import { AbstractEvents } from "../../events/src/index.js";
+import { z } from "zod";
+import { functionSchema, intStringParser } from "../../shared/src/zod.js";
+import { AbstractArchive } from "../../archive/src/index.js";
+
+export const configSchema = z.object({
+  logger: z.boolean().optional(),
+  port: z.union([intStringParser, z.number()]).optional(),
+  archive: z
+    .object({
+      url: archiveURLSchema.optional(),
+    })
+    .optional(),
+});
+type ConfigSchema = z.infer<typeof configSchema>;
 
 export class API {
   #port;
@@ -21,27 +35,26 @@ export class API {
   }
 
   constructor({
-    events,
-    archive,
-    report,
     logger = false,
-    ping = new Ping(),
     port,
-  }: {
-    events: AbstractEvents;
-    archive: ArchiveRouteOptions;
-    report: AbstractReport;
-    ping?: Ping;
-    logger?: boolean;
-    port?: number;
+    archive,
+    dependencies: { ping, report, archive: archiveModule, events },
+  }: ConfigSchema & {
+    dependencies: {
+      events: AbstractEvents;
+      archive: AbstractArchive;
+      report: AbstractReport;
+      ping: Ping;
+    };
   }) {
-    this.#port = port;
+    if (port && port !== 0) this.#port = port;
     this.#fastify = Fastify({ logger });
     this.#fastify.register(eventRoute, { events, prefix: "/event" });
     this.#fastify.register(reportRoute, { report, prefix: "/report" });
     this.#fastify.register(pingRoute, { ping, prefix: "/ping" });
     this.#fastify.register(archiveRoute, {
       ...archive,
+      module: archiveModule,
       prefix: "/archive",
     });
   }
