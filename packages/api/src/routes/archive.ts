@@ -1,10 +1,11 @@
 import { FastifyPluginCallback } from "fastify";
-import timeIntervalSchema from "../schemas/timeIntervalSchema.js";
 import urlJoin from "url-join";
+import { z } from "zod";
+
 import { AbstractArchive } from "../../../archive/src/index.js";
 import { TimeInterval } from "../../../shared/src/types/timeInterval.js";
-import { z } from "zod";
 import { functionSchema } from "../../../shared/src/zod.js";
+import timeIntervalSchema from "../schemas/timeIntervalSchema.js";
 
 export const archiveURLFunction = z.function({
   input: [z.object({ uuid: z.string() })],
@@ -30,7 +31,7 @@ export default ((fastify, { module: archive, url }, done) => {
         },
       },
     },
-    handler: async (request, reply) => {
+    handler: async (request) => {
       const archiveUUID = await archive.createEventsArchive(request.body);
       return {
         statusCode: 200,
@@ -64,7 +65,7 @@ export default ((fastify, { module: archive, url }, done) => {
     handler: async (request, reply) => {
       const stream = await archive.readEventsArchive(request.params);
       if (stream) {
-        stream.on("error", (error) => {
+        stream.on("error", () => {
           reply.send({
             statusCode: 500,
             error: "Error streaming file",
@@ -87,7 +88,7 @@ export default ((fastify, { module: archive, url }, done) => {
   fastify.route({
     method: "POST",
     url: "/drop_database",
-    handler: async (request, reply) => {
+    handler: async () => {
       await archive.dropDatabase();
       return { statusCode: 200 };
     },

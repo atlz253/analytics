@@ -1,12 +1,14 @@
-import { TimeInterval } from "../../shared/src/types/timeInterval.js";
 import { randomUUID } from "node:crypto";
-import { Storage, storageOptionsSchema } from "./storage.js";
 import { unlink } from "node:fs/promises";
-import { zipJSON } from "./archive.js";
-import { storage as initStorage } from "./storage.js";
 import { Readable } from "node:stream";
-import { AbstractEvents } from "../../events/src/index.js";
+
 import { z } from "zod";
+
+import { AbstractEvents } from "../../events/src/index.js";
+import { TimeInterval } from "../../shared/src/types/timeInterval.js";
+import { zipJSON } from "./archive.js";
+import { Storage, storageOptionsSchema } from "./storage.js";
+import { storage as initStorage } from "./storage.js";
 
 export const configSchema = z.object({
   storage: storageOptionsSchema,
@@ -27,13 +29,13 @@ export abstract class AbstractArchive {
 }
 
 export class ArchiveMock extends AbstractArchive {
-  createEventsArchive(options: {
+  createEventsArchive(_options: {
     timeInterval: TimeInterval;
   }): Promise<string> {
     throw new Error("Mocked");
   }
 
-  readEventsArchive(options: {
+  readEventsArchive(_options: {
     archiveUUID: string;
   }): Promise<Readable | undefined> {
     throw new Error("Mocked");

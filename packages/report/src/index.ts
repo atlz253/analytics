@@ -1,8 +1,9 @@
-import { TimeInterval } from "../../shared/src/types/timeInterval.js";
 import { UserActivityEvent } from "events/src/types.js";
-import { EventTypesReport, UserReport, UsersReport } from "./types.js";
-import { AbstractEvents } from "../../events/src/index.js";
 import { omit } from "ramda";
+
+import { AbstractEvents } from "../../events/src/index.js";
+import { TimeInterval } from "../../shared/src/types/timeInterval.js";
+import { EventTypesReport, UserReport, UsersReport } from "./types.js";
 
 export abstract class AbstractReport {
   abstract createUsersReport(event: {
@@ -24,26 +25,26 @@ export abstract class AbstractReport {
 }
 
 export class ReportMock extends AbstractReport {
-  createUsersReport(event: {
+  createUsersReport(_event: {
     timeInterval: TimeInterval;
   }): Promise<UsersReport> {
     throw new Error("Mock");
   }
 
-  createUserReport(event: {
+  createUserReport(_event: {
     userUUID: string;
     timeInterval: TimeInterval;
   }): Promise<UserReport> {
     throw new Error("Mock");
   }
 
-  createEventTypesReport(event: {
+  createEventTypesReport(_event: {
     timeInterval: TimeInterval;
   }): Promise<EventTypesReport> {
     throw new Error("Mock");
   }
 
-  createEventsReport(event: {
+  createEventsReport(_event: {
     timeInterval: TimeInterval;
   }): Promise<Array<UserActivityEvent>> {
     throw new Error("Mock");
@@ -123,7 +124,8 @@ export class CloudFunctionReport extends AbstractReport {
     timeInterval: TimeInterval;
   }): Promise<UsersReport> {
     try {
-      const response = await fetch( // TODO: вынести хост в .env
+      const response = await fetch(
+        // TODO: вынести хост в .env
         "https://d5dabihqt2mj59hvr4c0.svoluuab.apigw.yandexcloud.net/report/users",
         {
           method: "POST",

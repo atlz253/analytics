@@ -1,14 +1,15 @@
-import { afterEach, beforeEach, describe, expect, test } from "vitest";
-import { API } from "../../src/index.js";
-import { Report } from "../../../report/src/index.js";
-import { localhost } from "../utils/address.js";
+import { omit } from "ramda";
 import urlJoin from "url-join";
-import fastify from "../utils/fastify.js";
+import { afterEach, beforeEach, describe, expect, test } from "vitest";
+
+import { ArchiveMock } from "../../../archive/src/index.js";
 import { initEvents as initEvents } from "../../../events/src/index.js";
+import { Report } from "../../../report/src/index.js";
+import { API } from "../../src/index.js";
+import { localhost } from "../utils/address.js";
+import fastify from "../utils/fastify.js";
 import { post } from "../utils/fetch.js";
 import mock from "./mock.js";
-import { omit } from "ramda";
-import { ArchiveMock } from "../../../archive/src/index.js";
 
 describe("/report", async () => {
   let events = await initEvents({ storage: { type: "RAM" } });

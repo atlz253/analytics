@@ -1,10 +1,10 @@
-import http from "k6/http";
-import { check, sleep } from "k6";
 import { faker } from "@faker-js/faker";
+import { check, sleep } from "k6";
+import http from "k6/http";
 
 faker.seed(27);
 
-export let options = {
+export const options = {
   stages: [
     { duration: "2m", target: 500 },
     { duration: "5m", target: 500 },
@@ -37,7 +37,7 @@ export default function () {
     page: faker.word.noun(),
   };
 
-  let response = http.post(
+  const response = http.post(
     "http://host.docker.internal:3000/event",
     JSON.stringify(payload),
     {
@@ -49,7 +49,7 @@ export default function () {
     }
   );
 
-  let checksResult = check(
+  const checksResult = check(
     response,
     {
       "status is 200": (r) => r.status === 200,
@@ -61,7 +61,7 @@ export default function () {
         try {
           JSON.parse(r.body);
           return true;
-        } catch (e) {
+        } catch {
           return false;
         }
       },
@@ -92,7 +92,7 @@ export function setup() {
     page: "catalog",
   };
 
-  let response = http.post(
+  const response = http.post(
     "http://host.docker.internal:3000/event",
     JSON.stringify(testPayload),
     {
@@ -110,7 +110,7 @@ export function setup() {
     try {
       const body = JSON.parse(response.body);
       console.log(`Получен ответ: ${JSON.stringify(body)}`);
-    } catch (e) {
+    } catch {
       console.warn("Ответ не является валидным JSON");
     }
   }

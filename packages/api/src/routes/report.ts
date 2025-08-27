@@ -1,7 +1,8 @@
 import { FastifyPluginCallback } from "fastify";
-import timeIntervalSchema from "../schemas/timeIntervalSchema.js";
+
 import { AbstractReport } from "../../../report/src/index.js";
 import { TimeInterval } from "../../../shared/src/types/timeInterval.js";
+import timeIntervalSchema from "../schemas/timeIntervalSchema.js";
 
 export default ((fastify, { report }, done) => {
   fastify.route<{ Body: { timeInterval: TimeInterval } }>({
@@ -16,7 +17,7 @@ export default ((fastify, { report }, done) => {
         },
       },
     },
-    handler: async (request, reply) => {
+    handler: async (request) => {
       return {
         statusCode: 200,
         users: await report.createUsersReport(request.body),
@@ -40,7 +41,7 @@ export default ((fastify, { report }, done) => {
         },
       },
     },
-    handler: async (request, reply) => {
+    handler: async (request) => {
       return {
         ...(await report.createUserReport(request.body)),
         statusCode: 200,
@@ -60,7 +61,7 @@ export default ((fastify, { report }, done) => {
         },
       },
     },
-    handler: async (request, reply) => {
+    handler: async (request) => {
       return {
         ...(await report.createEventTypesReport(request.body)),
         statusCode: 200,
@@ -80,7 +81,7 @@ export default ((fastify, { report }, done) => {
         },
       },
     },
-    handler: async (request, reply) => {
+    handler: async (request) => {
       return {
         statusCode: 200,
         events: await report.createEventsReport(request.body),

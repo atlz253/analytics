@@ -1,14 +1,15 @@
 import Fastify from "fastify";
-import pingRoute from "./routes/ping.js";
-import eventRoute from "./routes/event.js";
-import reportRoute from "./routes/report.js";
-import archiveRoute, { archiveURLSchema } from "./routes/archive.js";
+import { z } from "zod";
+
+import { AbstractArchive } from "../../archive/src/index.js";
+import { AbstractEvents } from "../../events/src/index.js";
 import { Ping } from "../../ping/src/index.js";
 import { AbstractReport } from "../../report/src/index.js";
-import { AbstractEvents } from "../../events/src/index.js";
-import { z } from "zod";
-import { functionSchema, intStringParser } from "../../shared/src/zod.js";
-import { AbstractArchive } from "../../archive/src/index.js";
+import { intStringParser } from "../../shared/src/zod.js";
+import archiveRoute, { archiveURLSchema } from "./routes/archive.js";
+import eventRoute from "./routes/event.js";
+import pingRoute from "./routes/ping.js";
+import reportRoute from "./routes/report.js";
 
 export const configSchema = z.object({
   logger: z.boolean().optional(),

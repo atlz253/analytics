@@ -1,8 +1,9 @@
 import { BuildConfig, defineModule } from "@atlz253/frontier";
+
+import { archiveURLFunction } from "../../../api/src/routes/archive.js";
+import { configSchema as archiveConfigSchema } from "../../../archive/src/index.js";
 import { configSchema as eventsConfigSchema } from "../../../events/src/index.js";
 import { CloudFunctionReport } from "../../../report/src/index.js";
-import { configSchema as archiveConfigSchema } from "../../../archive/src/index.js";
-import { archiveURLFunction } from "../../../api/src/routes/archive.js";
 
 export default async (): Promise<BuildConfig> => ({
   modules: {

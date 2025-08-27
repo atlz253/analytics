@@ -1,18 +1,20 @@
-import { afterEach, beforeEach, describe, expect, test } from "vitest";
-import { API } from "../src/index.js";
-import { initEvents as initEvents } from "../../events/src/index.js";
-import { initArchive as initArchive } from "../../archive/src/index.js";
+import { unlink } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+
+import AdmZip from "adm-zip";
+import { omit } from "ramda";
 import urlJoin from "url-join";
+import { afterEach, beforeEach, describe, expect, test } from "vitest";
+
+import { initArchive as initArchive } from "../../archive/src/index.js";
+import { initEvents as initEvents } from "../../events/src/index.js";
+import { ReportMock } from "../../report/src/index.js";
+import { downloadFile } from "../../shared/src/tests/downloadFile.js";
+import { API } from "../src/index.js";
 import { localhost } from "./utils/address.js";
 import fastify from "./utils/fastify.js";
 import { post } from "./utils/fetch.js";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
-import AdmZip from "adm-zip";
-import { omit } from "ramda";
-import { downloadFile } from "../../shared/src/tests/downloadFile.js";
-import { unlink } from "node:fs/promises";
-import { ReportMock } from "../../report/src/index.js";
 
 describe("/archive", async () => {
   let events = await initEvents({ storage: { type: "RAM" } });

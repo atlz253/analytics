@@ -1,10 +1,10 @@
-import http from "k6/http";
-import { check, sleep } from "k6";
 import { faker } from "@faker-js/faker";
+import { check, sleep } from "k6";
+import http from "k6/http";
 
 faker.seed(27);
 
-export let options = {
+export const options = {
   stages: [
     { duration: "2m", target: 500 },
     { duration: "5m", target: 500 },
@@ -83,7 +83,7 @@ export function setup() {
   const testPayload = {
     timeInterval: { start: "2024-04-01", end: "2024-12-01" },
   };
-  let response = http.post(
+  const response = http.post(
     "http://host.docker.internal:3000/archive/events",
     JSON.stringify(testPayload),
     { headers: { "Content-Type": "application/json" } }
@@ -106,7 +106,7 @@ export function setup() {
 export default function () {
   // Отправляем событие на /event
   const eventPayload = generateEventPayload();
-  let eventResponse = http.post(
+  const eventResponse = http.post(
     "http://host.docker.internal:3000/event",
     JSON.stringify(eventPayload),
     {
@@ -125,7 +125,7 @@ export default function () {
       try {
         JSON.parse(r.body);
         return true;
-      } catch (e) {
+      } catch {
         return false;
       }
     },
@@ -135,7 +135,7 @@ export default function () {
   if (Math.random() < 0.1) {
     const archivePayload = generateArchivePayload();
     if (archivePayload) {
-      let archiveResponse = http.post(
+      const archiveResponse = http.post(
         "http://host.docker.internal:3000/archive/events",
         JSON.stringify(archivePayload),
         {
@@ -144,7 +144,7 @@ export default function () {
         }
       );
 
-      let archiveChecks = check(archiveResponse, {
+      const archiveChecks = check(archiveResponse, {
         "archive status is 200": (r) => r.status === 200,
         "archive response time < 1000ms": (r) => r.timings.duration < 1000,
         "archive content type is JSON": (r) =>
@@ -154,7 +154,7 @@ export default function () {
           try {
             const body = JSON.parse(r.body);
             return !!body.archiveUrl; // Проверяем наличие archiveUrl
-          } catch (e) {
+          } catch {
             return false;
           }
         },
@@ -165,7 +165,7 @@ export default function () {
         try {
           const archiveBody = JSON.parse(archiveResponse.body);
           if (archiveBody.archiveUrl) {
-            let downloadResponse = http.get(archiveBody.archiveUrl, {
+            const downloadResponse = http.get(archiveBody.archiveUrl, {
               tags: { endpoint: "download", test_scenario: "load_test" },
             });
             check(downloadResponse, {

@@ -1,9 +1,10 @@
 import { Handler } from "@yandex-cloud/function-types";
+
+import { tlsCAFile } from "../../shared/src/cloud-function/tlsCAFile.js";
 import { initEvents } from "../src/index.js";
 import { UserActivityEvent } from "../src/types.js";
-import { tlsCAFile } from "../../shared/src/cloud-function/tlsCAFile.js";
 
-export const handler: Handler.Http = async (event, context) => {
+export const handler: Handler.Http = async (event) => {
   const events = await initEvents({
     storage: {
       type: "mongo",

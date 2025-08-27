@@ -1,15 +1,17 @@
+import { createReadStream, statSync } from "node:fs";
+import { copyFile, mkdir } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { basename, join } from "node:path";
-import { copyFile, mkdir } from "node:fs/promises";
-import { createReadStream, statSync } from "node:fs";
-import { Db, GridFSBucket, MongoClient, MongoClientOptions } from "mongodb";
 import { Readable } from "node:stream";
+
 import {
   ObjectCannedACL,
   PutObjectCommand,
   S3Client,
 } from "@aws-sdk/client-s3";
+import { Db, GridFSBucket, MongoClient } from "mongodb";
 import { z } from "zod";
+
 import {
   MongoClientOptionsSchema,
   mongoClientOptionsSchema,
@@ -162,7 +164,7 @@ export class YandexObjectStorage extends Storage {
     await this.#client.send(command);
   }
 
-  readEventsArchive(options: {
+  readEventsArchive(_options: {
     archiveUUID: string;
   }): Promise<Readable | undefined> {
     throw new Error("Method not implemented.");
@@ -177,7 +179,7 @@ export async function storage({ type, ...options }: StorageOptionsSchema) {
   switch (type) {
     case "RAM":
       return new RAMStorage();
-    case "mongo":
+    case "mongo": {
       const {
         user,
         password,
@@ -191,7 +193,8 @@ export async function storage({ type, ...options }: StorageOptionsSchema) {
       );
       await client.connect();
       return new MongoStorage({ db: client.db("archive") });
-    case "YS3":
+    }
+    case "YS3": {
       const { region, credentials } = options as YandexS3OptionsSchema;
       // TODO: пробрасывать значения через конфиги
       const s3Client = new S3Client({
@@ -200,5 +203,6 @@ export async function storage({ type, ...options }: StorageOptionsSchema) {
         endpoint: "https://storage.yandexcloud.net",
       });
       return new YandexObjectStorage({ client: s3Client });
+    }
   }
 }

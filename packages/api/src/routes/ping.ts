@@ -1,4 +1,5 @@
 import { FastifyPluginCallback } from "fastify";
+
 import { Ping } from "../../../ping/src/index.js";
 
 export default ((fastify, { ping }, done) => {

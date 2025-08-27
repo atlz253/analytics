@@ -1,4 +1,5 @@
 import { describe, expect, test } from "vitest";
+
 import { storage as initStorage } from "../src/storage.js";
 import { UserActivityEvent } from "../src/types.js";
 

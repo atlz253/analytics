@@ -1,7 +1,12 @@
-import { storage as getStorage, Storage, storageOptionsSchema } from "./storage.js";
-import { UserActivityEvent } from "./types.js";
-import { TimeInterval } from "../../shared/src/types/timeInterval.js";
 import { z } from "zod";
+
+import { TimeInterval } from "../../shared/src/types/timeInterval.js";
+import {
+  Storage,
+  storage as getStorage,
+  storageOptionsSchema,
+} from "./storage.js";
+import { UserActivityEvent } from "./types.js";
 
 export const configSchema = z.object({
   cloudFunction: z.boolean().optional(),
@@ -24,15 +29,15 @@ export abstract class AbstractEvents {
 }
 
 export class EventsMock extends AbstractEvents {
-  createEvents(events: Array<UserActivityEvent>): Promise<void> {
+  createEvents(_events: Array<UserActivityEvent>): Promise<void> {
     throw new Error("Mock");
   }
 
-  createEvent(event: UserActivityEvent): Promise<void> {
+  createEvent(_event: UserActivityEvent): Promise<void> {
     throw new Error("Mock");
   }
 
-  readEvents(options: {
+  readEvents(_options: {
     timeInterval: TimeInterval;
   }): Promise<Array<UserActivityEvent>> {
     throw new Error("Mock");

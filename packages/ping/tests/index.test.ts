@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, test } from "vitest";
+
 import { Ping } from "../src/index.js";
 
 describe("ping", () => {

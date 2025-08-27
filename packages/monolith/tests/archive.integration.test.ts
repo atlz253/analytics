@@ -1,13 +1,15 @@
-import { afterAll, beforeEach, describe, expect, test } from "vitest";
-import urlJoin from "url-join";
-import { post } from "../../api/tests/utils/fetch.js";
-import { UserActivityEvent } from "events/src/types.js";
-import { join } from "node:path";
-import { tmpdir } from "node:os";
-import { downloadFile } from "../../shared/src/tests/downloadFile.js";
-import AdmZip from "adm-zip";
-import { omit } from "ramda";
 import { unlink } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+
+import AdmZip from "adm-zip";
+import { UserActivityEvent } from "events/src/types.js";
+import { omit } from "ramda";
+import urlJoin from "url-join";
+import { afterAll, beforeEach, describe, expect, test } from "vitest";
+
+import { post } from "../../api/tests/utils/fetch.js";
+import { downloadFile } from "../../shared/src/tests/downloadFile.js";
 
 describe("Создание архивов", async () => {
   const url = (...parts: string[]) =>

@@ -1,8 +1,9 @@
 import { Handler } from "@yandex-cloud/function-types";
+
 import { initEvents } from "../../events/src/index.js";
 import { tlsCAFile } from "../../shared/src/cloud-function/tlsCAFile.js";
-import { AbstractArchive, initArchive as archive } from "../src/index.js";
 import { TimeInterval } from "../../shared/src/types/timeInterval.js";
+import { AbstractArchive, initArchive as archive } from "../src/index.js";
 
 const initArchive = async (): Promise<AbstractArchive> => {
   const events = await initEvents({
@@ -25,7 +26,7 @@ const initArchive = async (): Promise<AbstractArchive> => {
 };
 
 // FIXME: валидация входных данных в yandex functions
-export const handler: Handler.Http = async (event, context) => {
+export const handler: Handler.Http = async (event) => {
   const archive = await initArchive();
   const uuid = await archive.createEventsArchive(
     JSON.parse(event.body) as { timeInterval: TimeInterval }

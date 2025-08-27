@@ -1,5 +1,6 @@
+import { FastifyPluginCallback } from "fastify";
+
 import { AbstractEvents } from "../../../events/src/index.js";
-import { FastifyPluginCallback, FastifySchema } from "fastify";
 
 interface UserActivityEvent {
   eventType: "userActivity";
@@ -42,7 +43,7 @@ export default ((fastify, { events }, done) => {
     schema: {
       body: userActivityEventSchema,
     },
-    handler: async (request, reply) => {
+    handler: async (request) => {
       await events.createEvent({
         ...request.body,
         occurrenceTime: new Date(request.body.occurrenceTime),
@@ -60,7 +61,7 @@ export default ((fastify, { events }, done) => {
         items: userActivityEventSchema,
       },
     },
-    handler: async (request, reply) => {
+    handler: async (request) => {
       await events.createEvents(
         request.body.map((e) => ({
           ...e,
@@ -75,7 +76,7 @@ export default ((fastify, { events }, done) => {
   fastify.route({
     method: "POST",
     url: "/drop_database",
-    handler: async (request, reply) => {
+    handler: async () => {
       await events.dropDatabase();
       return { statusCode: 200 };
     },

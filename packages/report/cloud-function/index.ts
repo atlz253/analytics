@@ -1,8 +1,9 @@
 import { Handler } from "@yandex-cloud/function-types";
+
 import { initEvents } from "../../events/src/index.js";
 import { tlsCAFile } from "../../shared/src/cloud-function/tlsCAFile.js";
-import { Report } from "../src/index.js";
 import { TimeInterval } from "../../shared/src/types/timeInterval.js";
+import { Report } from "../src/index.js";
 
 const initReport = async (): Promise<Report> => {
   const events = await initEvents({
@@ -20,7 +21,7 @@ const initReport = async (): Promise<Report> => {
 };
 
 // FIXME: валидация входных данных в yandex functions
-export const users: Handler.Http = async (event, context) => {
+export const users: Handler.Http = async (event) => {
   const report = await initReport();
   return {
     statusCode: 200,
@@ -34,7 +35,7 @@ export const users: Handler.Http = async (event, context) => {
   };
 };
 
-export const user: Handler.Http = async (event, context) => {
+export const user: Handler.Http = async (event) => {
   const report = await initReport();
   return {
     statusCode: 200,
@@ -51,7 +52,7 @@ export const user: Handler.Http = async (event, context) => {
   };
 };
 
-export const eventTypes: Handler.Http = async (event, context) => {
+export const eventTypes: Handler.Http = async (event) => {
   const report = await initReport();
   return {
     statusCode: 200,
@@ -65,7 +66,7 @@ export const eventTypes: Handler.Http = async (event, context) => {
   };
 };
 
-export const events: Handler.Http = async (event, context) => {
+export const events: Handler.Http = async (event) => {
   const report = await initReport();
   return {
     statusCode: 200,

@@ -1,11 +1,12 @@
 import { Db, MongoClient } from "mongodb";
-import { UserActivityEvent } from "./types.js";
-import { TimeInterval } from "../../shared/src/types/timeInterval.js";
 import { z } from "zod";
+
 import {
   MongoClientOptionsSchema,
   mongoClientOptionsSchema,
 } from "../../shared/src/mongo.js";
+import { TimeInterval } from "../../shared/src/types/timeInterval.js";
+import { UserActivityEvent } from "./types.js";
 
 const RAMStorageOptionsSchema = z.object({
   // TODO: убрать эту возможность
@@ -118,7 +119,7 @@ class MongoStorage extends Storage {
     userUUID?: string;
     timeInterval: TimeInterval;
   }): Promise<Array<UserActivityEvent>> {
-    let result = this.#db.collection("userActivity").find({
+    const result = this.#db.collection("userActivity").find({
       occurrenceTime: {
         $gte: new Date(timeInterval.start),
         ...(timeInterval.end === undefined
@@ -142,7 +143,7 @@ export async function storage({
   switch (type) {
     case "RAM":
       return new RAMStorage(options as RAMStorageOptions);
-    case "mongo":
+    case "mongo": {
       const {
         user,
         password,
@@ -156,5 +157,6 @@ export async function storage({
       );
       await client.connect();
       return new MongoStorage({ db: client.db("events") });
+    }
   }
 }

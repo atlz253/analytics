@@ -1,18 +1,19 @@
 import { BuildConfig, defineModule } from "@atlz253/frontier";
-import {
-  initEvents,
-  configSchema as eventsConfigSchema,
-} from "../../../events/src/index.js";
-import { Report } from "../../../report/src/index.js";
-import {
-  initArchive,
-  configSchema as archiveConfigSchema,
-} from "../../../archive/src/index.js";
+
 import {
   API,
   configSchema as APIConfigSchema,
 } from "../../../api/src/index.js";
+import {
+  configSchema as archiveConfigSchema,
+  initArchive,
+} from "../../../archive/src/index.js";
+import {
+  configSchema as eventsConfigSchema,
+  initEvents,
+} from "../../../events/src/index.js";
 import { Ping } from "../../../ping/src/index.js";
+import { Report } from "../../../report/src/index.js";
 
 export default async (): Promise<BuildConfig> => ({
   modules: {

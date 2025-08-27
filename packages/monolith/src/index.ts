@@ -1,9 +1,11 @@
-import { API } from "../../api/src/index.js";
-import { Builder } from "@atlz253/frontier";
-import developConfig from "../config/frontier/develop.js";
-import dotenv from "dotenv";
 import { resolve } from "node:path";
 import { cwd } from "node:process";
+
+import { Builder } from "@atlz253/frontier";
+import dotenv from "dotenv";
+
+import { API } from "../../api/src/index.js";
+import developConfig from "../config/frontier/develop.js";
 
 (async () => {
   dotenv.config({

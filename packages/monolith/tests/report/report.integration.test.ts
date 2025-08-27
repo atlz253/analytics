@@ -1,9 +1,10 @@
-import { afterAll, beforeEach, describe, expect, test } from "vitest";
-import { post } from "../../../api/tests/utils/fetch.js";
-import urlJoin from "url-join";
 import { UserActivityEvent } from "events/src/types.js";
-import mock from "./mock.js";
 import { omit } from "ramda";
+import urlJoin from "url-join";
+import { afterAll, beforeEach, describe, expect, test } from "vitest";
+
+import { post } from "../../../api/tests/utils/fetch.js";
+import mock from "./mock.js";
 
 describe("Создание отчетов", async () => {
   const url = (...parts: string[]) =>

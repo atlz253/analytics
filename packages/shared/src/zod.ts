@@ -9,7 +9,7 @@ export const intStringParser = z
  * {@link https://github.com/colinhacks/zod/issues/4143#issuecomment-2845134912}
  */
 export const functionSchema = <T extends z.core.$ZodFunction>(schema: T) =>
-  // @ts-ignore
+  // @ts-expect-error Тип функции заранее не известен
   z.custom<Parameters<T["implement"]>[0]>((fn) => schema.implement(fn));
 
 /**
@@ -19,6 +19,6 @@ export const createAsyncFunctionSchema = <T extends z.core.$ZodFunction>(
   schema: T
 ) =>
   z.custom<Parameters<T["implementAsync"]>[0]>((fn) =>
-    // @ts-ignore
+    // @ts-expect-error Тип функции заранее не известен
     schema.implementAsync(fn)
   );

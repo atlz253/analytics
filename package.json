@@ -6,6 +6,8 @@
     "packages/*"
   ],
   "scripts": {
+    "lint": "eslint .",
+    "lint.fix": "eslint . --fix",
     "test": "vitest",
     "test.integration": "vitest --config vitest.integration.config.ts",
     "test.load.down": "docker-compose -f docker-compose.load.yml down",
@@ -46,14 +48,21 @@
   "author": "Fedor Alekseev",
   "license": "MIT",
   "devDependencies": {
+    "@eslint/js": "^9.33.0",
     "@faker-js/faker": "^9.8.0",
     "@types/archiver": "^6.0.3",
     "@types/node": "^24.0.1",
     "@types/ramda": "^0.30.2",
     "@yandex-cloud/function-types": "^2.1.2",
     "esbuild": "^0.25.5",
+    "eslint": "^9.33.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-simple-import-sort": "^12.1.1",
+    "globals": "^16.3.0",
+    "jiti": "^2.5.1",
     "tsx": "^4.20.3",
     "typescript": "^5.8.3",
+    "typescript-eslint": "^8.40.0",
     "vitest": "^3.2.3"
   },
   "dependencies": {

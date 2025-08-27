@@ -1,9 +1,9 @@
 // Файл: k6-scripts/test.js
-import http from "k6/http";
 import { check, sleep } from "k6";
+import http from "k6/http";
 
 // Настройки тестирования
-export let options = {
+export const options = {
   // Сценарий нагрузочного тестирования
   stages: [
     { duration: "30s", target: 20 }, // Разогрев до 20 пользователей за 30 секунд
@@ -29,7 +29,7 @@ export let options = {
 // Основная функция тестирования
 export default function () {
   // Тестируем ping эндпоинт (используем host.docker.internal для доступа к localhost из контейнера)
-  let response = http.get("http://host.docker.internal:3000/ping", {
+  const response = http.get("http://host.docker.internal:3000/ping", {
     tags: {
       endpoint: "ping",
       test_scenario: "load_test",
@@ -37,7 +37,7 @@ export default function () {
   });
 
   // Проверка статуса и содержимого ответа
-  let checksResult = check(
+  const checksResult = check(
     response,
     {
       "status is 200": (r) => r.status === 200,
@@ -49,7 +49,7 @@ export default function () {
         try {
           const body = JSON.parse(r.body);
           return body.statusCode === 200 && body.response === "pong";
-        } catch (e) {
+        } catch {
           return false;
         }
       },
@@ -77,7 +77,7 @@ export function setup() {
   console.log("Начало нагрузочного тестирования ping эндпоинта...");
 
   // Проверяем доступность ping эндпоинта
-  let response = http.get("http://host.docker.internal:3000/ping");
+  const response = http.get("http://host.docker.internal:3000/ping");
   if (response.status !== 200) {
     console.warn(
       `Предупреждение: ping эндпоинт отвечает со статусом ${response.status}`
@@ -90,7 +90,7 @@ export function setup() {
       console.log(
         `Получен корректный ответ: statusCode=${body.statusCode}, response=${body.response}`
       );
-    } catch (e) {
+    } catch {
       console.warn("Ответ не является валидным JSON");
     }
   }

@@ -1,10 +1,10 @@
-import http from "k6/http";
-import { check, sleep } from "k6";
 import { faker } from "@faker-js/faker";
+import { check, sleep } from "k6";
+import http from "k6/http";
 
 faker.seed(27);
 
-export let options = {
+export const options = {
   stages: [
     { duration: "2m", target: 500 },
     { duration: "5m", target: 500 },
@@ -86,7 +86,7 @@ export function setup() {
 export default function () {
   // Send an event to /event
   const eventPayload = generateEventPayload();
-  let eventResponse = http.post(
+  const eventResponse = http.post(
     "http://host.docker.internal:3000/event",
     JSON.stringify(eventPayload),
     {
@@ -102,7 +102,7 @@ export default function () {
     if (!timeIntervalPayload) return;
 
     // Scenario 1: Fetch users and then a specific user
-    let usersResponse = http.post(
+    const usersResponse = http.post(
       "http://host.docker.internal:3000/report/users",
       JSON.stringify(timeIntervalPayload),
       {
