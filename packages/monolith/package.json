@@ -14,7 +14,6 @@
     "@atlz253/api": "^0.0.0",
     "@atlz253/archive": "^0.0.0",
     "@atlz253/events": "^0.0.0",
-    "@atlz253/frontier": "^0.0.4",
     "@atlz253/ping": "^0.0.0",
     "@atlz253/report": "^0.0.0",
     "@atlz253/shared": "^0.0.0",

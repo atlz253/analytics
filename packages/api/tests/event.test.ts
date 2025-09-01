@@ -1,6 +1,7 @@
-import { ArchiveMock } from "@atlz253/archive";
-import { initEvents as initEvents } from "@atlz253/events";
-import { ReportMock } from "@atlz253/report";
+import { AbstractArchive, ArchiveMock } from "@atlz253/archive";
+import { AbstractEvents, initEvents as initEvents } from "@atlz253/events";
+import { Builder, classBuilder, defineModule } from "@atlz253/frontier";
+import { AbstractReport, ReportMock } from "@atlz253/report";
 import { post } from "@atlz253/shared/tests/fetch";
 import { omit } from "ramda";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
@@ -9,29 +10,44 @@ import { API } from "../src/index.js";
 import { localhost } from "./utils/address.js";
 import fastify from "./utils/fastify.js";
 
-describe("/event", async () => {
-  let events = await initEvents({ storage: { type: "RAM" } });
-  let api = new API({
-    // FIXME: исправить тесты
-    events,
-    report: new ReportMock(),
-    archive: { module: new ArchiveMock() },
-  });
+interface Modules {
+  api: API;
+  events: AbstractEvents;
+  archive: AbstractArchive;
+  report: AbstractReport;
+}
 
-  const url = () => localhost(api.port) + "/event";
+describe("/event", async () => {
+  let modules: Modules;
+
+  const url = () => localhost((modules["api"] as API).port) + "/event";
 
   beforeEach(async () => {
-    events = await initEvents({ storage: { type: "RAM" } });
-    api = new API({
-      events,
-      report: new ReportMock(),
-      archive: { module: new ArchiveMock() },
+    modules = await new Builder().build({
+      modules: {
+        events: defineModule({
+          builder: initEvents,
+          arguments: {
+            storage: { type: "RAM" },
+          },
+        }),
+        archive: defineModule({
+          builder: classBuilder(ArchiveMock),
+        }),
+        report: defineModule({
+          builder: classBuilder(ReportMock),
+        }),
+        api: defineModule({
+          builder: classBuilder(API),
+          dependencies: ["events", "archive", "report"],
+        }),
+      },
     });
-    await api.listen();
+    await modules.api.listen();
   });
 
   afterEach(async () => {
-    await api.close();
+    await modules.api.close();
   });
 
   test("должна возвращаться ошибка если не переданы данные", async () => {
@@ -57,7 +73,7 @@ describe("/event", async () => {
       body: JSON.stringify(event),
     });
     expect(await response.json()).toEqual({ statusCode: 200 });
-    const lastEvent = await events.last();
+    const lastEvent = await modules.events.last();
     expect(typeof lastEvent).toBe("object");
     if (lastEvent !== undefined && "createTime" in lastEvent)
       delete lastEvent.createTime;
@@ -105,7 +121,7 @@ describe("/event", async () => {
     ).toEqual({
       statusCode: 200,
     });
-    const last = await events.last();
+    const last = await modules.events.last();
     if (typeof last === "object" && "createTime" in last)
       delete last.createTime;
     expect(last).toEqual({

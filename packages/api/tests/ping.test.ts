@@ -1,36 +1,53 @@
-import { ArchiveMock } from "@atlz253/archive";
-import { EventsMock } from "@atlz253/events";
+import { AbstractArchive, ArchiveMock } from "@atlz253/archive";
+import { AbstractEvents, EventsMock } from "@atlz253/events";
+import { Builder, classBuilder, defineModule } from "@atlz253/frontier";
 import { Ping } from "@atlz253/ping";
-import { ReportMock } from "@atlz253/report";
+import { AbstractReport, ReportMock } from "@atlz253/report";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 
 import { API } from "../src/index.js";
 import { localhost } from "./utils/address.js";
 
+interface Modules {
+  api: API;
+  events: AbstractEvents;
+  archive: AbstractArchive;
+  report: AbstractReport;
+}
+
 describe("/ping", () => {
-  let api = new API({
-    // FIXME: исправить тесты
-    events: new EventsMock(),
-    archive: { module: new ArchiveMock() },
-    report: new ReportMock(),
-  });
+  let modules: Modules;
 
   beforeEach(async () => {
-    api = new API({
-      events: new EventsMock(),
-      archive: { module: new ArchiveMock() },
-      report: new ReportMock(),
+    modules = await new Builder().build({
+      modules: {
+        events: defineModule({
+          builder: classBuilder(EventsMock),
+        }),
+        archive: defineModule({
+          builder: classBuilder(ArchiveMock),
+        }),
+        report: defineModule({
+          builder: classBuilder(ReportMock),
+        }),
+        ping: defineModule({
+          builder: classBuilder(Ping),
+        }),
+        api: defineModule({
+          builder: classBuilder(API),
+          dependencies: ["events", "archive", "report", "ping"],
+        }),
+      },
     });
-    new Ping();
-    await api.listen();
+    await modules.api.listen();
   });
 
   afterEach(async () => {
-    await api.close();
+    await modules.api.close();
   });
 
   test("возвращает pong", async () => {
-    const response = await fetch(localhost(api.port) + "/ping");
+    const response = await fetch(localhost(modules.api.port) + "/ping");
     expect(await response.json()).toEqual({
       statusCode: 200,
       response: "pong",

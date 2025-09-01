@@ -66,6 +66,7 @@
     "vitest": "^3.2.3"
   },
   "dependencies": {
+    "@atlz253/frontier": "^0.0.6",
     "archiver": "^7.0.1",
     "mongodb": "^6.17.0",
     "ramda": "^0.30.1",

@@ -2,9 +2,10 @@ import { unlink } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-import { initArchive as initArchive } from "@atlz253/archive";
-import { initEvents as initEvents } from "@atlz253/events";
-import { ReportMock } from "@atlz253/report";
+import { AbstractArchive, initArchive as initArchive } from "@atlz253/archive";
+import { AbstractEvents, initEvents as initEvents } from "@atlz253/events";
+import { Builder, defineModule } from "@atlz253/frontier";
+import { AbstractReport, ReportMock } from "@atlz253/report";
 import { downloadFile } from "@atlz253/shared/tests/downloadFile";
 import { post } from "@atlz253/shared/tests/fetch";
 import AdmZip from "adm-zip";
@@ -16,38 +17,52 @@ import { API } from "../src/index.js";
 import { localhost } from "./utils/address.js";
 import fastify from "./utils/fastify.js";
 
+interface Modules {
+  events: AbstractEvents;
+  archive: AbstractArchive;
+  report: AbstractReport;
+  api: API;
+}
+
 describe("/archive", async () => {
-  let events = await initEvents({ storage: { type: "RAM" } });
-  let archive = await initArchive({
-    // FIXME: исправить тесты
-    events,
-    storage: { type: "RAM" },
-  });
-  let api = new API({
-    events,
-    archive: { module: archive },
-    report: new ReportMock(),
-  });
+  let modules: Modules;
 
   const url = (...parts: Array<string>) =>
-    urlJoin(localhost(api.port), "archive", ...parts);
+    urlJoin(localhost((modules["api"] as API).port), "archive", ...parts);
 
   beforeEach(async () => {
-    events = await initEvents({ storage: { type: "RAM" } });
-    archive = await initArchive({
-      events,
-      storage: { type: "RAM" },
+    modules = await new Builder().build({
+      modules: {
+        events: defineModule({
+          builder: (...args: Parameters<typeof initEvents>) =>
+            initEvents(...args),
+          arguments: {
+            storage: { type: "RAM" },
+          },
+        }),
+        archive: defineModule({
+          builder: (...args: Parameters<typeof initArchive>) =>
+            initArchive(...args),
+          arguments: {
+            storage: { type: "RAM" },
+          },
+          dependencies: ["events"],
+        }),
+        report: defineModule({
+          builder: () => new ReportMock(),
+        }),
+        api: defineModule({
+          builder: (...args: ConstructorParameters<typeof API>) =>
+            new API(...args),
+          dependencies: ["events", "archive", "report"],
+        }),
+      },
     });
-    api = new API({
-      events,
-      archive: { module: archive },
-      report: new ReportMock(),
-    });
-    await api.listen();
+    await modules.api.listen();
   });
 
   afterEach(async () => {
-    await api.close();
+    await modules.api.close();
   });
 
   test("/events должен возвращать ошибку при пустом теле запроса", async () => {
@@ -57,6 +72,7 @@ describe("/archive", async () => {
   });
 
   test("/events должен формировать архив с событиями за заданный интервал времени", async () => {
+    const events = modules["events"] as AbstractEvents;
     await events.createEvents([
       {
         eventType: "userActivity",
