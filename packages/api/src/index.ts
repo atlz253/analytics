@@ -1,10 +1,10 @@
+import { AbstractArchive } from "@atlz253/archive";
+import { AbstractEvents } from "@atlz253/events";
+import { Ping } from "@atlz253/ping";
+import { AbstractReport } from "@atlz253/report";
 import Fastify from "fastify";
 import { z } from "zod";
 
-import { AbstractArchive } from "../../archive/src/index.js";
-import { AbstractEvents } from "../../events/src/index.js";
-import { Ping } from "../../ping/src/index.js";
-import { AbstractReport } from "../../report/src/index.js";
 import { intStringParser } from "../../shared/src/zod.js";
 import archiveRoute, { archiveURLSchema } from "./routes/archive.js";
 import eventRoute from "./routes/event.js";

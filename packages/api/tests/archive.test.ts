@@ -2,23 +2,24 @@ import { unlink } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
+import { initArchive as initArchive } from "@atlz253/archive";
+import { initEvents as initEvents } from "@atlz253/events";
+import { ReportMock } from "@atlz253/report";
+import { downloadFile } from "@atlz253/shared/tests/downloadFile";
+import { post } from "@atlz253/shared/tests/fetch";
 import AdmZip from "adm-zip";
 import { omit } from "ramda";
 import urlJoin from "url-join";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 
-import { initArchive as initArchive } from "../../archive/src/index.js";
-import { initEvents as initEvents } from "../../events/src/index.js";
-import { ReportMock } from "../../report/src/index.js";
-import { downloadFile } from "../../shared/src/tests/downloadFile.js";
 import { API } from "../src/index.js";
 import { localhost } from "./utils/address.js";
 import fastify from "./utils/fastify.js";
-import { post } from "./utils/fetch.js";
 
 describe("/archive", async () => {
   let events = await initEvents({ storage: { type: "RAM" } });
   let archive = await initArchive({
+    // FIXME: исправить тесты
     events,
     storage: { type: "RAM" },
   });

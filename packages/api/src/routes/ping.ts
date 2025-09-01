@@ -1,6 +1,5 @@
+import { Ping } from "@atlz253/ping";
 import { FastifyPluginCallback } from "fastify";
-
-import { Ping } from "../../../ping/src/index.js";
 
 export default ((fastify, { ping }, done) => {
   fastify.get("/", async () => {

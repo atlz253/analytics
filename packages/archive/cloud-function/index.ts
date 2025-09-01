@@ -1,12 +1,12 @@
+import { initEvents } from "@atlz253/events";
+import { tlsCAFile } from "@atlz253/shared/cloud-function/tlsCAFile";
+import { TimeInterval } from "@atlz253/shared/types/timeInterval";
 import { Handler } from "@yandex-cloud/function-types";
 
-import { initEvents } from "../../events/src/index.js";
-import { tlsCAFile } from "../../shared/src/cloud-function/tlsCAFile.js";
-import { TimeInterval } from "../../shared/src/types/timeInterval.js";
 import { AbstractArchive, initArchive as archive } from "../src/index.js";
 
 const initArchive = async (): Promise<AbstractArchive> => {
-  const events = await initEvents({
+  const events = await initEvents({ // FIXME: исправить
     storage: {
       type: "mongo",
       host: "mongodb://user2:12345678@rc1b-uumhquflh32vru1k.mdb.yandexcloud.net:27018/",

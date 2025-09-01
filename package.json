@@ -1,6 +1,6 @@
 {
-  "name": "analytics",
-  "version": "1.0.0",
+  "name": "@atlz253/analytics",
+  "version": "0.0.0",
   "type": "module",
   "workspaces": [
     "packages/*"

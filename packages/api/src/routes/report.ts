@@ -1,7 +1,7 @@
+import { AbstractReport } from "@atlz253/report";
+import { TimeInterval } from "@atlz253/shared/types/timeInterval";
 import { FastifyPluginCallback } from "fastify";
 
-import { AbstractReport } from "../../../report/src/index.js";
-import { TimeInterval } from "../../../shared/src/types/timeInterval.js";
 import timeIntervalSchema from "../schemas/timeIntervalSchema.js";
 
 export default ((fastify, { report }, done) => {

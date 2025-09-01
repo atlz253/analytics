@@ -1,11 +1,11 @@
+import { tlsCAFile } from "@atlz253/shared/cloud-function/tlsCAFile";
 import { Handler } from "@yandex-cloud/function-types";
 
-import { tlsCAFile } from "../../shared/src/cloud-function/tlsCAFile.js";
 import { initEvents } from "../src/index.js";
 import { UserActivityEvent } from "../src/types.js";
 
 export const handler: Handler.Http = async (event) => {
-  const events = await initEvents({
+  const events = await initEvents({ // FIXME: исправить
     storage: {
       type: "mongo",
       host: "mongodb://user2:12345678@rc1b-uumhquflh32vru1k.mdb.yandexcloud.net:27018/",

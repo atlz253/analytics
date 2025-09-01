@@ -5,17 +5,16 @@ import { basename, join } from "node:path";
 import { Readable } from "node:stream";
 
 import {
+  MongoClientOptionsSchema,
+  mongoClientOptionsSchema,
+} from "@atlz253/shared/mongo";
+import {
   ObjectCannedACL,
   PutObjectCommand,
   S3Client,
 } from "@aws-sdk/client-s3";
 import { Db, GridFSBucket, MongoClient } from "mongodb";
 import { z } from "zod";
-
-import {
-  MongoClientOptionsSchema,
-  mongoClientOptionsSchema,
-} from "../../shared/src/mongo.js";
 
 const yandexS3OptionsSchema = z.object({
   region: z.string(),

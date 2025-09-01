@@ -1,7 +1,7 @@
 {
   "type": "module",
-  "name": "monolith",
-  "version": "1.0.0",
+  "name": "@atlz253/monolith",
+  "version": "0.0.0",
   "main": "src/index.ts",
   "scripts": {
     "start": "node dist/index.cjs",
@@ -11,7 +11,13 @@
     "develop": "tsx watch src/index.ts"
   },
   "dependencies": {
+    "@atlz253/api": "^0.0.0",
+    "@atlz253/archive": "^0.0.0",
+    "@atlz253/events": "^0.0.0",
     "@atlz253/frontier": "^0.0.4",
+    "@atlz253/ping": "^0.0.0",
+    "@atlz253/report": "^0.0.0",
+    "@atlz253/shared": "^0.0.0",
     "dotenv": "^17.2.1"
   }
 }

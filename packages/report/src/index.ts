@@ -1,4 +1,4 @@
-import { UserActivityEvent } from "events/src/types.js";
+import { UserActivityEvent } from "@atlz253/events/types";
 import { omit } from "ramda";
 
 import { AbstractEvents } from "../../events/src/index.js";

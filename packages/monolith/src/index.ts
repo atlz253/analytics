@@ -1,10 +1,10 @@
 import { resolve } from "node:path";
 import { cwd } from "node:process";
 
+import { API } from "@atlz253/api";
 import { Builder } from "@atlz253/frontier";
 import dotenv from "dotenv";
 
-import { API } from "../../api/src/index.js";
 import developConfig from "../config/frontier/develop.js";
 
 (async () => {

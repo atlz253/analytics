@@ -2,14 +2,13 @@ import { unlink } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
+import { UserActivityEvent } from "@atlz253/events/types";
+import { downloadFile } from "@atlz253/shared/tests/downloadFile";
+import { post } from "@atlz253/shared/tests/fetch";
 import AdmZip from "adm-zip";
-import { UserActivityEvent } from "events/src/types.js";
 import { omit } from "ramda";
 import urlJoin from "url-join";
 import { afterAll, beforeEach, describe, expect, test } from "vitest";
-
-import { post } from "../../api/tests/utils/fetch.js";
-import { downloadFile } from "../../shared/src/tests/downloadFile.js";
 
 describe("Создание архивов", async () => {
   const url = (...parts: string[]) =>

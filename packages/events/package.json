@@ -1,9 +1,20 @@
 {
-  "name": "events",
+  "name": "@atlz253/events",
   "type": "module",
-  "version": "1.0.0",
+  "version": "0.0.0",
   "main": "src/index.ts",
   "scripts": {
     "serverless.build": "tsx cloud-function/esbuild.ts && node ../../scripts/zip.cjs ./dist/cloud-function/index.zip ./dist/cloud-function/index.js"
+  },
+  "exports": {
+    ".": {
+      "import": "./src/index.js"
+    },
+    "./types": {
+      "import": "./src/types.js"
+    }
+  },
+  "dependencies": {
+    "@atlz253/shared": "^0.0.0"
   }
 }

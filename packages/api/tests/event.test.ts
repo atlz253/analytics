@@ -1,17 +1,18 @@
+import { ArchiveMock } from "@atlz253/archive";
+import { initEvents as initEvents } from "@atlz253/events";
+import { ReportMock } from "@atlz253/report";
+import { post } from "@atlz253/shared/tests/fetch";
 import { omit } from "ramda";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 
-import { ArchiveMock } from "../../archive/src/index.js";
-import { initEvents as initEvents } from "../../events/src/index.js";
-import { ReportMock } from "../../report/src/index.js";
 import { API } from "../src/index.js";
 import { localhost } from "./utils/address.js";
 import fastify from "./utils/fastify.js";
-import { post } from "./utils/fetch.js";
 
 describe("/event", async () => {
   let events = await initEvents({ storage: { type: "RAM" } });
   let api = new API({
+    // FIXME: исправить тесты
     events,
     report: new ReportMock(),
     archive: { module: new ArchiveMock() },

@@ -1,6 +1,6 @@
+import { TimeInterval } from "@atlz253/shared/types/timeInterval";
 import { z } from "zod";
 
-import { TimeInterval } from "../../shared/src/types/timeInterval.js";
 import {
   Storage,
   storage as getStorage,

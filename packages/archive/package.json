@@ -1,12 +1,14 @@
 {
-  "name": "archive",
+  "name": "@atlz253/archive",
   "type": "module",
-  "version": "1.0.0",
+  "version": "0.0.0",
   "main": "src/index.ts",
   "scripts": {
     "serverless.build": "tsx cloud-function/esbuild.ts && node ../../scripts/zip.cjs ./dist/cloud-function/index.zip ./dist/cloud-function/index.js"
   },
   "dependencies": {
+    "@atlz253/events": "^0.0.0",
+    "@atlz253/shared": "^0.0.0",
     "@aws-sdk/client-s3": "^3.832.0"
   }
 }

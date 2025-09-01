@@ -2,10 +2,10 @@ import { randomUUID } from "node:crypto";
 import { unlink } from "node:fs/promises";
 import { Readable } from "node:stream";
 
+import { AbstractEvents } from "@atlz253/events";
+import { TimeInterval } from "@atlz253/shared/types/timeInterval";
 import { z } from "zod";
 
-import { AbstractEvents } from "../../events/src/index.js";
-import { TimeInterval } from "../../shared/src/types/timeInterval.js";
 import { zipJSON } from "./archive.js";
 import { Storage, storageOptionsSchema } from "./storage.js";
 import { storage as initStorage } from "./storage.js";

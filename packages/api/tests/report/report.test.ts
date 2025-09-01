@@ -1,14 +1,14 @@
+import { ArchiveMock } from "@atlz253/archive";
+import { initEvents as initEvents } from "@atlz253/events";
+import { Report } from "@atlz253/report";
+import { post } from "@atlz253/shared/tests/fetch";
 import { omit } from "ramda";
 import urlJoin from "url-join";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 
-import { ArchiveMock } from "../../../archive/src/index.js";
-import { initEvents as initEvents } from "../../../events/src/index.js";
-import { Report } from "../../../report/src/index.js";
 import { API } from "../../src/index.js";
 import { localhost } from "../utils/address.js";
 import fastify from "../utils/fastify.js";
-import { post } from "../utils/fetch.js";
 import mock from "./mock.js";
 
 describe("/report", async () => {

@@ -1,4 +1,4 @@
-import { UserActivityEvent } from "events/src/types.js";
+import { UserActivityEvent } from "@atlz253/events/types";
 
 export default {
   eventsReportEvents: (): Array<UserActivityEvent> => [

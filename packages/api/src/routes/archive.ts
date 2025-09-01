@@ -1,10 +1,10 @@
+import { AbstractArchive } from "@atlz253/archive";
+import { TimeInterval } from "@atlz253/shared/types/timeInterval";
+import { functionSchema } from "@atlz253/shared/zod";
 import { FastifyPluginCallback } from "fastify";
 import urlJoin from "url-join";
 import { z } from "zod";
 
-import { AbstractArchive } from "../../../archive/src/index.js";
-import { TimeInterval } from "../../../shared/src/types/timeInterval.js";
-import { functionSchema } from "../../../shared/src/zod.js";
 import timeIntervalSchema from "../schemas/timeIntervalSchema.js";
 
 export const archiveURLFunction = z.function({

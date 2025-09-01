@@ -1,8 +1,7 @@
+import { configSchema as eventsConfigSchema } from "@atlz253/events";
 import { BuildConfig, defineModule } from "@atlz253/frontier";
+import { tlsCAFile } from "@atlz253/shared/cloud-function/tlsCAFile";
 import { MongoClientOptions } from "mongodb";
-
-import { configSchema as eventsConfigSchema } from "../../../events/src/index.js";
-import { tlsCAFile } from "../../../shared/src/cloud-function/tlsCAFile.js";
 
 export default async (): Promise<BuildConfig> => ({
   modules: {

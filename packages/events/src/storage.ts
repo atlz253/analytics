@@ -1,11 +1,11 @@
-import { Db, MongoClient } from "mongodb";
-import { z } from "zod";
-
 import {
   MongoClientOptionsSchema,
   mongoClientOptionsSchema,
-} from "../../shared/src/mongo.js";
-import { TimeInterval } from "../../shared/src/types/timeInterval.js";
+} from "@atlz253/shared/mongo";
+import { TimeInterval } from "@atlz253/shared/types/timeInterval";
+import { Db, MongoClient } from "mongodb";
+import { z } from "zod";
+
 import { UserActivityEvent } from "./types.js";
 
 const RAMStorageOptionsSchema = z.object({

@@ -1,6 +1,5 @@
+import { AbstractEvents } from "@atlz253/events";
 import { FastifyPluginCallback } from "fastify";
-
-import { AbstractEvents } from "../../../events/src/index.js";
 
 interface UserActivityEvent {
   eventType: "userActivity";

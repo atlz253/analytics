@@ -1,11 +1,31 @@
 {
-  "name": "shared",
+  "name": "@atlz253/shared",
   "type": "module",
-  "version": "1.0.0",
+  "version": "0.0.0",
   "dependencies": {
     "adm-zip": "^0.5.16"
   },
   "devDependencies": {
     "@types/adm-zip": "^0.5.7"
+  },
+  "exports": {
+    "./cloud-function/tlsCAFile": {
+      "import": "./src/cloud-function/tlsCAFile.js"
+    },
+    "./tests/downloadFile": {
+      "import": "./src/tests/downloadFile.js"
+    },
+    "./tests/fetch": {
+      "import": "./src/tests/fetch.js"
+    },
+    "./types/timeInterval": {
+      "import": "./src/types/timeInterval.js"
+    },
+    "./mongo": {
+      "import": "./src/mongo.js"
+    },
+    "./zod": {
+      "import": "./src/zod.js"
+    }
   }
 }

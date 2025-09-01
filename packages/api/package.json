@@ -1,10 +1,23 @@
 {
-  "name": "api",
+  "name": "@atlz253/api",
   "type": "module",
-  "version": "1.0.0",
+  "version": "0.0.0",
   "main": "src/index.ts",
   "dependencies": {
+    "@atlz253/archive": "^0.0.0",
+    "@atlz253/events": "^0.0.0",
+    "@atlz253/ping": "^0.0.0",
+    "@atlz253/report": "^0.0.0",
+    "@atlz253/shared": "^0.0.0",
     "fastify": "^5.4.0",
     "url-join": "^5.0.0"
+  },
+  "exports": {
+    ".": {
+      "import": "./src/index.js"
+    },
+    "./routes/archive": {
+      "import": "./src/routes/archive.js"
+    }
   }
 }
