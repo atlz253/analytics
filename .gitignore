@@ -44,5 +44,6 @@ dist
 
 infrastructure/terraform/cloud-config.yml
 infrastructure/terraform/declaration.yml
+infrastructure/terraform/key.json
 
 .env.*
