@@ -69,7 +69,7 @@ terraform init
 
 #### Удаление созданных ресурсов
 
-Для удаления созданных ресурсов используйте команду `terraform destroy`. Возможно понадобится ручное удаление Docker-image из Container Registry.
+Для удаления созданных ресурсов используйте команду `terraform destroy`. Возможно понадобится ручное удаление Docker-images из Container Registry и объектов из Object Storage.
 
 ### Container Optimized Image
 
