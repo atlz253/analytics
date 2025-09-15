@@ -40,8 +40,9 @@ resource "yandex_mdb_mongodb_cluster" "mongo-cluster" {
   }
 
   host {
-    zone_id   = "ru-central1-a"
-    subnet_id = yandex_vpc_subnet.subnet-1.id
+    zone_id          = "ru-central1-a"
+    subnet_id        = yandex_vpc_subnet.subnet-1.id
+    assign_public_ip = true
   }
 
   resources_mongod {
@@ -51,18 +52,18 @@ resource "yandex_mdb_mongodb_cluster" "mongo-cluster" {
   }
 }
 
-resource "yandex_mdb_mongodb_database" "mongo-db" {
+resource "yandex_mdb_mongodb_database" "mongo-db-events" {
   cluster_id = yandex_mdb_mongodb_cluster.mongo-cluster.id
-  name       = "mongo-db"
+  name       = "events"
 }
 
-resource "yandex_mdb_mongodb_user" "mongo-user" {
+resource "yandex_mdb_mongodb_user" "mongo-user-events" {
   cluster_id = yandex_mdb_mongodb_cluster.mongo-cluster.id
-  name       = "test"
-  password   = "password"
+  name       = "events-user"
+  password   = "events-password"
 
   permission {
-    database_name = yandex_mdb_mongodb_database.mongo-db.name
+    database_name = yandex_mdb_mongodb_database.mongo-db-events.name
     roles         = ["readWrite"]
   }
 }

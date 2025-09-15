@@ -1,12 +1,8 @@
 # Экспериментальная система в рамках исследования serverless технологий
 
-## Отправка docker image в Yandex Cloud Container Registry
+## Начало работы
 
-1. [аутентифицироваться](https://yandex.cloud/ru/docs/container-registry/operations/authentication) в реестре
-2. собираем образ `docker build -f .\Dockerfile.monolith.release.yandex -t cr.yandex/<Идентификатор регистра>/analytics:1.0.0 .`
-3. отправляем в регистр `docker push cr.yandex/<Идентификатор регистра>/analytics:1.0.0`
-
-Подробная инструкция [здесь](https://yandex.cloud/ru/docs/container-registry/operations/docker-image/docker-image-push)
+Установите npm зависимости при помощи команды `npm ci`
 
 ## Yandex Cloud
 
@@ -17,7 +13,7 @@
 
 #### Краткая инструкция для Windows 11
 
-1. Необходимо сгенерировать публичный SSH ключ (должен располагаться по пути ~/.ssh/id_ed25519.pub)
+1. Необходимо сгенерировать публичный SSH ключ (если генерировали его ранее, то обычно он находится по пути ~/.ssh/id_ed25519.pub)
 2. Перейдите в директорию с конфигурацией Terraform: `cd .\infrastructure\terraform\`
 3. При помощи команды `yc init` создайте профиль для управления каталогом
 4. В Yandex Cloud необходимо создать сервисный аккаунт с ролью в каталоге `editor`
@@ -60,15 +56,16 @@ terraform providers lock -net-mirror=https://terraform-mirror.yandexcloud.net -p
 terraform init
 ```
 
-11. Скопируйте файл `cloud-config.example.yml` и переименуйте копию в `cloud-config.yml`, вставьте свой публичный ssh ключ в соответствующую строку
+11. Скопируйте файл `cloud-config.example.yml` и переименуйте копию в `cloud-config.yml`, вставьте свой публичный ssh ключ в соответствующую строку, а также задайте имя пользователя в поле `name` (обычно ваше имя пользователя написано в конце публичного ключа: `<имя_пользователя>@<имя_устройства>`)
 12. Скопируйте файл `declaration.example.yml` и переименуйте копию в `declaration.yml` (его редактирование будет позже)
 13. Выполните команду `terraform apply` для первоначального развертывания инфраструктуры
 14. Перейдите В [console.yandex.cloud](https://console.yandex.cloud/)
-15. Создайте сервисный аккаунт и назначьте ему роль `container-registry.images.puller` для развернутого регистра Docker image и укажите его в качестве сервисного аккаунта Container Optimized Image (Изменить -> Дополнительно -> Сервисный аккаунт)
-16. Опубликуйте Docker-образ по инструкции из раздела [Отправка docker image в Yandex Cloud Container Registry](#отправка-docker-image-в-yandex-cloud-container-registry)
-17. В файле `declaration.example.yml` введите название опубликованного Docker-образа
-18. Выполните команду `terraform apply` для обновления конфигурации инфраструктуры, в терминале будут выведены IP-адреса виртуальной машины
-19. Проверьте работу приложения, при помощи `http://<external_ip>:3000/ping`
+15. Создайте сервисный аккаунт и назначьте ему роль `container-registry.images.puller` для развернутого Container Registry (Container Registry -> container-registry -> Права доступа -> Назначить роли) и укажите его в качестве сервисного аккаунта Container Optimized Image (Compute Cloud -> ВМ Container Optimized Image -> Изменить ВМ -> Дополнительно -> Сервисный аккаунт)
+16. Соберите Docker-образ [монолитной версии системы для развертывания на платформе Yandex Cloud](#сборка-docker-image-монолитной-версии-системы-для-развертывания-на-платформе-yandex-cloud)
+17. Опубликуйте Docker-образ по инструкции из раздела [Отправка Docker image в Yandex Cloud Container Registry](#отправка-docker-image)
+18. В файле `declaration.yml` введите название опубликованного Docker-образа
+19. Выполните команду `terraform apply` для обновления конфигурации инфраструктуры, в терминале будут выведены IP-адреса виртуальной машины
+20. Проверьте работу приложения, при помощи `http://<external_ip>:3000/ping`
 
 #### Удаление созданных ресурсов
 
@@ -77,6 +74,37 @@ terraform init
 ### Container Optimized Image
 
 Монолитная часть системы разворачивается внутри виртуальной машины [Container Optimized Image](https://yandex.cloud/ru/docs/cos/quickstart)
+
+#### Просмотр логов запуска Docker-образов
+
+Для этого авторизуйтесь в виртуальной машине по SSH и введите команду: `sudo journalctl -eu yc-container-daemon`
+
+### Yandex Cloud Container Registry
+
+#### Начало работы
+
+[Аутентифицируйтесь](https://yandex.cloud/ru/docs/container-registry/operations/authentication) в реестре Yandex Cloud Container Registry по инструкции
+
+#### Сборка Docker image монолитной версии системы для развертывания на платформе Yandex Cloud
+
+1. Разверните инфраструктуру Yandex Cloud по [инструкции выше](#yandex-cloud-iaac)
+2. Создайте сервисный аккаунт в Identity and Access Managements и настройте его для управления Object Storage: выдайте ему роли `kms.keys.encrypterDecrypter`, `kms.keys.user`, `storage.editor` на странице Object Storage -> Бакеты -> <название_бакета> -> Безопасность -> Назначить роли
+3. Создайте файл `.env.yandex.local` в директории `/packages/monolith` и заполните его следующими данными
+
+```Shell
+EVENTS_STORAGE_MONGO_HOSTS=<адрес_хоста>:<порт> # можно найти в Managed Service for MongoDB -> Кластеры -> mongo-cluster -> Базы данных -> events -> Подключиться
+
+# необходимо получить для сервисного аккаунта с доступом к объектному хранилищу (Identity and Access Management -> Сервисные аккаунты -> аккаунт -> Создать новый ключ -> Создать статический ключ доступа)
+ARCHIVE_STORAGE_YS3_ACCESS_KEY_ID=<access_key_id>
+ARCHIVE_STORAGE_YS3_SECRET_ACCESS_KEY=<secret_access_key_id>
+```
+
+#### Отправка Docker image
+
+1. собираем образ `docker build -f .\Dockerfile.monolith.release.yandex -t cr.yandex/<Идентификатор регистра>/analytics:1.0.0 .`
+2. отправляем в регистр `docker push cr.yandex/<Идентификатор регистра>/analytics:1.0.0`
+
+Подробная инструкция [здесь](https://yandex.cloud/ru/docs/container-registry/operations/docker-image/docker-image-push)
 
 #### Решение проблем
 

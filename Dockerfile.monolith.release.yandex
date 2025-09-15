@@ -13,6 +13,7 @@ FROM node:22.15.0-alpine AS production
 
 WORKDIR /app
 
+COPY packages/monolith/.env packages/monolith/.env.* ./
 COPY --from=builder /build/packages/monolith/dist ./dist
 
 EXPOSE 3000

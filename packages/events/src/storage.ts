@@ -3,7 +3,7 @@ import {
   mongoClientOptionsSchema,
 } from "@atlz253/shared/mongo";
 import { TimeInterval } from "@atlz253/shared/types/timeInterval";
-import { Db, MongoClient } from "mongodb";
+import { Db, MongoClient, MongoError } from "mongodb";
 import { z } from "zod";
 
 import { UserActivityEvent } from "./types.js";
@@ -148,15 +148,26 @@ export async function storage({
         user,
         password,
         hosts,
-        port,
         options: mongoOptions,
       } = options as MongoClientOptionsSchema;
       const client = new MongoClient(
-        `mongodb://${user}:${password}@${hosts}:${port}/`,
+        `mongodb://${user}:${password}@${hosts}/`,
         mongoOptions
       );
-      await client.connect();
-      return new MongoStorage({ db: client.db("events") });
+      try {
+        await client.connect();
+        return new MongoStorage({ db: client.db("events") });
+      } catch (error) {
+        if (error instanceof MongoError) {
+          console.error("Ошибка подключения к MongoDb:", error.message);
+          process.exit(1);
+        } else {
+          throw error;
+        }
+      }
+      break;
     }
+    default:
+      throw new Error(`Не удалось определить тип хранилища: ${type}`);
   }
 }

@@ -23,6 +23,9 @@ export default async (): Promise<BuildConfig> => ({
           password: process.env.EVENTS_STORAGE_MONGO_PASSWORD,
           hosts: process.env.EVENTS_STORAGE_MONGO_HOSTS,
           port: process.env.EVENTS_STORAGE_MONGO_PORT,
+          options: {
+            authSource: process.env.EVENTS_STORAGE_MONGO_DB_NAME,
+          },
         },
       }),
     }),
@@ -35,7 +38,7 @@ export default async (): Promise<BuildConfig> => ({
       builder: (...props: Parameters<typeof initArchive>) =>
         initArchive(...props),
       arguments: archiveConfigSchema.parse({
-        cloudFunction: Boolean(process.env.ARCHIVE_CLOUD_FUNCTION),
+        cloudFunction: process.env.ARCHIVE_CLOUD_FUNCTION === "true",
         storage: {
           type: process.env.ARCHIVE_STORAGE_TYPE,
           user: process.env.ARCHIVE_STORAGE_MONGO_USER,
@@ -43,9 +46,13 @@ export default async (): Promise<BuildConfig> => ({
           hosts: process.env.ARCHIVE_STORAGE_MONGO_HOSTS,
           port: process.env.ARCHIVE_STORAGE_MONGO_PORT,
           region: process.env.ARCHIVE_STORAGE_YS3_REGION,
+          bucketName: process.env.ARCHIVE_STORAGE_YS3_BUCKET_NAME,
           credentials: {
             accessKeyId: process.env.ARCHIVE_STORAGE_YS3_ACCESS_KEY_ID,
             secretAccessKey: process.env.ARCHIVE_STORAGE_YS3_SECRET_ACCESS_KEY,
+          },
+          options: {
+            authSource: process.env.ARCHIVE_STORAGE_MONGO_DB_NAME,
           },
         },
       }),

@@ -47,3 +47,4 @@ infrastructure/terraform/declaration.yml
 infrastructure/terraform/key.json
 
 .env.*
+!.env.yandex

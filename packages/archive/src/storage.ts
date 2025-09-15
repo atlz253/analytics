@@ -18,6 +18,7 @@ import { z } from "zod";
 
 const yandexS3OptionsSchema = z.object({
   region: z.string(),
+  bucketName: z.string(),
   credentials: z.object({
     accessKeyId: z.string(),
     secretAccessKey: z.string(),
@@ -141,10 +142,18 @@ export class MongoStorage extends Storage {
 
 export class YandexObjectStorage extends Storage {
   #client;
+  readonly #bucketName;
 
-  constructor({ client }: { client: S3Client }) {
+  constructor({
+    client,
+    bucketName,
+  }: {
+    client: S3Client;
+    bucketName: string;
+  }) {
     super();
     this.#client = client;
+    this.#bucketName = bucketName;
   }
 
   async createEventsArchive({
@@ -155,7 +164,7 @@ export class YandexObjectStorage extends Storage {
     path: string;
   }): Promise<void> {
     const command = new PutObjectCommand({
-      Bucket: "events-archives",
+      Bucket: this.#bucketName,
       Key: `events/${uuid}.zip`,
       Body: createReadStream(path),
       ACL: ObjectCannedACL.public_read,
@@ -183,25 +192,24 @@ export async function storage({ type, ...options }: StorageOptionsSchema) {
         user,
         password,
         hosts,
-        port,
         options: mongoOptions,
       } = options as MongoClientOptionsSchema;
       const client = new MongoClient(
-        `mongodb://${user}:${password}@${hosts}:${port}/`,
+        `mongodb://${user}:${password}@${hosts}/`,
         mongoOptions
       );
       await client.connect();
       return new MongoStorage({ db: client.db("archive") });
     }
     case "YS3": {
-      const { region, credentials } = options as YandexS3OptionsSchema;
-      // TODO: пробрасывать значения через конфиги
+      const { region, credentials, bucketName } =
+        options as YandexS3OptionsSchema;
       const s3Client = new S3Client({
         region,
         credentials: { ...credentials },
         endpoint: "https://storage.yandexcloud.net",
       });
-      return new YandexObjectStorage({ client: s3Client });
+      return new YandexObjectStorage({ client: s3Client, bucketName });
     }
   }
 }

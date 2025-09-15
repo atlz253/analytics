@@ -8,9 +8,16 @@ import dotenv from "dotenv";
 import developConfig from "../config/frontier/develop.js";
 import yandexConfig from "../config/frontier/yandex.js";
 
+process.on("uncaughtException", (error) => {
+  console.error(error.message);
+  process.exit(1);
+});
+
 (async () => {
   dotenv.config({
-    path: [".env.yandex", ".env"].map((f) => resolve(cwd(), f)),
+    path: [".env.yandex.local", ".env.yandex", ".env"].map((f) =>
+      resolve(cwd(), f)
+    ),
   });
   const modules = await new Builder().build(
     ...(await Promise.all([developConfig(), yandexConfig()]))

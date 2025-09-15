@@ -1,0 +1,313 @@
+{
+	"info": {
+		"_postman_id": "fb1b823f-0ca2-422a-8f76-c9917d694737",
+		"name": "analytics",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "48435656",
+		"_collection_link": "https://bold-escape-262912.postman.co/workspace/Fedor-Alekseev's-Workspace~fb255c09-49a1-4247-8f94-abff208b703a/collection/48435656-fb1b823f-0ca2-422a-8f76-c9917d694737?action=share&source=collection_link&creator=48435656"
+	},
+	"item": [
+		{
+			"name": "event",
+			"item": [
+				{
+					"name": "create",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"eventType\": \"userActivity\",\r\n    \"occurrenceTime\": \"2025-09-14T19:40:16.654Z\",\r\n    \"type\": \"test\",\r\n    \"userUUID\": \"c630f75c-44e4-469e-b620-66f1d59a63cc\",\r\n    \"page\": \"test.html\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/event",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"event"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "create_multiple",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "[\r\n    {\r\n        \"eventType\": \"userActivity\",\r\n        \"occurrenceTime\": \"2025-09-14T19:40:16.654Z\",\r\n        \"type\": \"test1\",\r\n        \"userUUID\": \"c630f75c-44e4-469e-b620-66f1d59a63cc\",\r\n        \"page\": \"test.html\"\r\n    },\r\n    {\r\n        \"eventType\": \"userActivity\",\r\n        \"occurrenceTime\": \"2025-09-14T19:40:16.654Z\",\r\n        \"type\": \"test2\",\r\n        \"userUUID\": \"c630f75c-44e4-469e-b620-66f1d59a63cc\",\r\n        \"page\": \"test.html\"\r\n    }\r\n]",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/event/create_multiple",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"event",
+								"create_multiple"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "report",
+			"item": [
+				{
+					"name": "users",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"timeInterval\": {\r\n        \"start\": \"2025-09-14\",\r\n        \"end\": \"2025-09-15\"\r\n    }\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/report/users",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"report",
+								"users"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "user",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"timeInterval\": {\r\n        \"start\": \"2025-09-14\",\r\n        \"end\": \"2025-09-15\"\r\n    },\r\n    \"userUUID\": \"c630f75c-44e4-469e-b620-66f1d59a63cc\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/report/user",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"report",
+								"user"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "eventTypes",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"timeInterval\": {\r\n        \"start\": \"2025-09-14\",\r\n        \"end\": \"2025-09-15\"\r\n    }\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/report/eventTypes",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"report",
+								"eventTypes"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "New Request",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"timeInterval\": {\r\n        \"start\": \"2025-09-14\",\r\n        \"end\": \"2025-09-15\"\r\n    }\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/report/events",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"report",
+								"events"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "archive",
+			"item": [
+				{
+					"name": "New Request",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"timeInterval\": {\r\n        \"start\": \"2025-09-14\",\r\n        \"end\": \"2025-09-15\"\r\n    }\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/archive/events",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"archive",
+								"events"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "ping",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseURL}}/ping",
+					"host": [
+						"{{baseURL}}"
+					],
+					"path": [
+						"ping"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseURL",
+			"value": ""
+		}
+	]
+}
