@@ -46,5 +46,4 @@ infrastructure/terraform/cloud-config.yml
 infrastructure/terraform/declaration.yml
 infrastructure/terraform/key.json
 
-.env.*
-!.env.yandex
+.env.yandex.local

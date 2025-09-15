@@ -89,7 +89,7 @@ terraform init
 
 1. Разверните инфраструктуру Yandex Cloud по [инструкции выше](#yandex-cloud-iaac)
 2. Создайте сервисный аккаунт в Identity and Access Managements и настройте его для управления Object Storage: выдайте ему роли `kms.keys.encrypterDecrypter`, `kms.keys.user`, `storage.editor` на странице Object Storage -> Бакеты -> <название_бакета> -> Безопасность -> Назначить роли
-3. Создайте файл `.env.yandex.local` в директории `/packages/monolith` и заполните его следующими данными
+3. скопируйте файл `.env.yandex.local.example` в директории `/packages/monolith` и переименуйте его в `.env.yandex.local`, заполните его следующими данными
 
 ```Shell
 EVENTS_STORAGE_MONGO_HOSTS=<адрес_хоста>:<порт> # можно найти в Managed Service for MongoDB -> Кластеры -> mongo-cluster -> Базы данных -> events -> Подключиться
