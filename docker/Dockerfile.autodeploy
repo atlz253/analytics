@@ -17,7 +17,8 @@ RUN npm ci
 
 COPY ./infrastructure/autodeploy/src /app/src/
 
-COPY ./infrastructure/terraform/cloud-config.example.yml ./infrastructure/terraform/declaration.example.yml ./infrastructure/terraform/main.tf /app/terraform/
+COPY ./infrastructure/terraform/cloud-config.example.yml ./infrastructure/terraform/declaration.example.yml /app/terraform/
+COPY ./infrastructure/terraform/monolith/main.tf /app/terraform/monolith/
 COPY ./infrastructure/terraform/.terraformrc.yandex /root/.terraformrc
 
 COPY ./Dockerfile.monolith.release.yandex ./package.json ./package-lock.json ./tsconfig.json /app/analytics/

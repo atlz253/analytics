@@ -198,10 +198,10 @@ process.env.YC_FOLDER_ID = catalog.id;
 
 if (!isTerraformHaveBeenInitialized()) {
   console.log("⚙️ Инициализация Terraform");
-  await terraformInit({ cwd: "/app/terraform" });
+  await terraformInit({ cwd: "/app/terraform/monolith" });
 }
 
-if (!existsSync("/app/terraform/cloud-config.yml")) {
+if (!existsSync("/app/terraform/monolith/cloud-config.yml")) {
   console.log("⚙️ Настройка SSH-доступа");
 
   const SSH_KEY = process.env.PUBLIC_SSH_KEY
@@ -220,13 +220,16 @@ if (!existsSync("/app/terraform/cloud-config.yml")) {
     .replace("<имя пользователя>", USER_NAME)
     .replace("<публичный SSH ключ>", SSH_KEY);
 
-  await writeFile("/app/terraform/cloud-config.yml", editedCloudConfig);
+  await writeFile(
+    "/app/terraform/monolith/cloud-config.yml",
+    editedCloudConfig,
+  );
 }
 
-if (!existsSync("/app/terraform/declaration.yml")) {
+if (!existsSync("/app/terraform/monolith/declaration.yml")) {
   await copyFile(
     "/app/terraform/declaration.example.yml",
-    "/app/terraform/declaration.yml",
+    "/app/terraform/monolith/declaration.yml",
   );
 }
 
@@ -255,7 +258,7 @@ if (choice === "monolith") {
   };
 
   const applyResult = (await apply({
-    cwd: "/app/terraform",
+    cwd: "/app/terraform/monolith",
     autoApprove: true,
   })) as ApplyResult;
   const registryId = applyResult["container-registry"]["registry_id"];
@@ -307,10 +310,13 @@ if (choice === "monolith") {
     containerTag,
   );
 
-  await writeFile("/app/terraform/declaration.yml", editedDockerVMDeclaration);
+  await writeFile(
+    "/app/terraform/monolith/declaration.yml",
+    editedDockerVMDeclaration,
+  );
 
   await apply({
-    cwd: "/app/terraform",
+    cwd: "/app/terraform/monolith",
     autoApprove: true,
   });
 
@@ -353,5 +359,5 @@ if (choice === "monolith") {
 
   console.log("🗑️ Удаление сервисов");
 
-  destroy({ cwd: "/app/terraform", autoApprove: true });
+  destroy({ cwd: "/app/terraform/monolith", autoApprove: true });
 }
