@@ -1,0 +1,26 @@
+FROM node:24.12.0-alpine
+
+WORKDIR /app
+
+RUN apk add --no-cache curl bash docker-cli docker-cli-buildx skopeo
+
+RUN wget https://releases.hashicorp.com/terraform/1.14.7/terraform_1.14.7_linux_amd64.zip \
+    && unzip terraform_1.14.7_linux_amd64.zip \
+    && rm terraform_1.14.7_linux_amd64.zip \
+    && mv terraform /usr/bin/terraform
+
+RUN curl -sSL https://storage.yandexcloud.net/yandexcloud-yc/install.sh | bash
+
+COPY ./infrastructure/autodeploy/package-lock.json ./infrastructure/autodeploy/package.json /app/
+
+RUN npm ci
+
+COPY ./infrastructure/autodeploy/src /app/src/
+
+COPY ./infrastructure/terraform/cloud-config.example.yml ./infrastructure/terraform/declaration.example.yml ./infrastructure/terraform/main.tf /app/terraform/
+COPY ./infrastructure/terraform/.terraformrc.yandex /root/.terraformrc
+
+COPY ./Dockerfile.monolith.release.yandex ./package.json ./package-lock.json ./tsconfig.json /app/analytics/
+COPY ./packages /app/analytics/packages/
+
+ENTRYPOINT [ "node", "src/index.ts" ]

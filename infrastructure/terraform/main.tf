@@ -77,6 +77,8 @@ resource "yandex_storage_bucket" "bucket-1" {
 }
 
 resource "yandex_compute_instance" "vm-1" {
+  name = "container-optimized-image-instance"
+
   boot_disk {
     initialize_params {
       image_id = data.yandex_compute_image.container-optimized-image.id
@@ -97,9 +99,23 @@ resource "yandex_compute_instance" "vm-1" {
 }
 
 output "container-optimized-image" {
-  description = "Адреса container optimized image"
+  description = "Container optimized image"
   value = {
     internal_ip = yandex_compute_instance.vm-1.network_interface.0.ip_address
     external_ip = yandex_compute_instance.vm-1.network_interface.0.nat_ip_address
+  }
+}
+
+output "container-registry" {
+  description = "Container registry"
+  value = {
+    registry_id = yandex_container_registry.container-registry.registry_id
+  }
+}
+
+output "mongo-events" {
+  description = "Mongo events db"
+  value = {
+    name = yandex_mdb_mongodb_cluster.mongo-cluster.host[0].name
   }
 }
