@@ -1,8 +1,7 @@
 import { existsSync } from "node:fs";
 import { copyFile, readFile, writeFile } from "node:fs/promises";
 
-import { instanceNames } from "../../constants/instanceNames.ts";
-import { serviceAccounts } from "../../constants/serviceAccounts.ts";
+import { instanceNames, serviceAccounts } from "../../constants/index.ts";
 import { db } from "../../db/index.ts";
 import { buildImage } from "../../integration/Docker/features/buildImage/index.ts";
 import { pushImage } from "../../integration/Docker/features/pushImage/index.ts";
@@ -15,7 +14,7 @@ import {
 } from "../../integration/YandexCloud/features/iamKey/index.ts";
 import { setServiceAccount } from "../../integration/YandexCloud/features/manageComputeCloud/index.ts";
 import { activateProfile } from "../../integration/YandexCloud/features/manageProfile/index.ts";
-import { getOrCreateAccount } from "../../integration/YandexCloud/features/manageServiceAccount/getOrCreateAccount.ts";
+import { getOrCreateAccount } from "../../integration/YandexCloud/features/manageServiceAccount/index.ts";
 import { activateEditorAccountProfile } from "../manageEditorAccount/index.ts";
 
 type ApplyResult = {
@@ -30,11 +29,14 @@ type ApplyResult = {
 export async function apply() {
   if (!db.data.monolith.isTerraformInitialized) {
     console.log("⚙️ Инициализация Terraform");
-    await initTerraform({ cwd: "/app/terraform/monolith" });
-    await db.update(({ monolith }) => (monolith.isTerraformInitialized = true));
+    await initTerraform({ cwd: "/app/terraform/serverless-monolith" });
+    await db.update(
+      ({ serverlessMonolith }) =>
+        (serverlessMonolith.isTerraformInitialized = true),
+    );
   }
 
-  if (!existsSync("/app/terraform/monolith/cloud-config.yml")) {
+  if (!existsSync("/app/terraform/serverless-monolith/cloud-config.yml")) {
     const cloudConfig = await readFile(
       "/app/terraform/cloud-config.example.yml",
       "utf-8",
@@ -45,22 +47,22 @@ export async function apply() {
       .replace("<публичный SSH ключ>", db.data.ssh.key);
 
     await writeFile(
-      "/app/terraform/monolith/cloud-config.yml",
+      "/app/terraform/serverless-monolith/cloud-config.yml",
       editedCloudConfig,
     );
   }
 
-  if (!existsSync("/app/terraform/monolith/declaration.yml")) {
+  if (!existsSync("/app/terraform/serverless-monolith/declaration.yml")) {
     await copyFile(
       "/app/terraform/declaration.example.yml",
-      "/app/terraform/monolith/declaration.yml",
+      "/app/terraform/serverless-monolith/declaration.yml",
     );
   }
 
   await activateEditorAccountProfile();
 
   const applyResult = (await applyTerraform({
-    cwd: "/app/terraform/monolith",
+    cwd: "/app/terraform/serverless-monolith",
     autoApprove: true,
   })) as ApplyResult;
   const registryId = applyResult["container-registry"]["registry_id"];
@@ -90,13 +92,13 @@ export async function apply() {
     .replace("<secret_access_key_id>", storageEditorStaticKeyInfo.secret);
 
   await writeFile(
-    "/app/analytics/packages/monolith/.env.yandex.local",
+    "/app/analytics/packages/monolith/.env.yandex.serverless.local",
     editedDockerVMEnv,
   );
 
   await buildImage({
     cwd: "/app/analytics",
-    dockerFile: "Dockerfile.monolith.release.yandex",
+    dockerFile: "Dockerfile.monolith.release.yandex.serverless",
     tag: containerTag,
     noCache: true,
   });
@@ -122,12 +124,12 @@ export async function apply() {
   );
 
   await writeFile(
-    "/app/terraform/monolith/declaration.yml",
+    "/app/terraform/serverless-monolith/declaration.yml",
     editedDockerVMDeclaration,
   );
 
   await applyTerraform({
-    cwd: "/app/terraform/monolith",
+    cwd: "/app/terraform/serverless-monolith",
     autoApprove: true,
   });
 

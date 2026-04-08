@@ -1,14 +1,8 @@
-import { existsSync } from "node:fs";
-import { copyFile, readFile, writeFile } from "node:fs/promises";
-
 import { input } from "@inquirer/prompts";
 import { configDotenv } from "dotenv";
 
 import { serviceAccounts } from "../../constants/index.ts";
-import {
-  init as terraformInit,
-  isHaveBeenInitialized as isTerraformHaveBeenInitialized,
-} from "../../integration/Terraform/features/init/index.ts";
+import { db } from "../../db/index.ts";
 import { DEFAULT_PROFILE_NAME } from "../../integration/YandexCloud/constants/index.ts";
 import {
   setAuthToken,
@@ -78,12 +72,7 @@ export async function initialize() {
 
   await activateProfile(DEFAULT_PROFILE_NAME);
 
-  if (!isTerraformHaveBeenInitialized()) {
-    console.log("⚙️ Инициализация Terraform");
-    await terraformInit({ cwd: "/app/terraform/monolith" });
-  }
-
-  if (!existsSync("/app/terraform/monolith/cloud-config.yml")) {
+  if (db.data.ssh.key === "" || db.data.ssh.user === "") {
     console.log("⚙️ Настройка SSH-доступа");
 
     const SSH_KEY = process.env.PUBLIC_SSH_KEY
@@ -95,25 +84,9 @@ export async function initialize() {
           message: "Введите имя пользователя вашего компьютера: ",
         });
 
-    const cloudConfig = await readFile(
-      "/app/terraform/cloud-config.example.yml",
-      "utf-8",
-    );
-
-    const editedCloudConfig = cloudConfig
-      .replace("<имя пользователя>", USER_NAME)
-      .replace("<публичный SSH ключ>", SSH_KEY);
-
-    await writeFile(
-      "/app/terraform/monolith/cloud-config.yml",
-      editedCloudConfig,
-    );
-  }
-
-  if (!existsSync("/app/terraform/monolith/declaration.yml")) {
-    await copyFile(
-      "/app/terraform/declaration.example.yml",
-      "/app/terraform/monolith/declaration.yml",
-    );
+    await db.update(({ ssh }) => {
+      ssh.key = SSH_KEY;
+      ssh.user = USER_NAME;
+    });
   }
 }
