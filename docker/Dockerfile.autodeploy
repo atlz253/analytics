@@ -11,6 +11,12 @@ RUN wget https://releases.hashicorp.com/terraform/1.14.7/terraform_1.14.7_linux_
 
 RUN curl -sSL https://storage.yandexcloud.net/yandexcloud-yc/install.sh | bash
 
+COPY ./Dockerfile.monolith.release.yandex ./Dockerfile.monolith.release.yandex.serverless ./package.json ./package-lock.json ./tsconfig.json /app/analytics/
+COPY ./packages /app/analytics/packages/
+COPY ./scripts /app/analytics/scripts/
+
+RUN npm install --prefix /app/analytics
+
 COPY ./infrastructure/autodeploy/package-lock.json ./infrastructure/autodeploy/package.json /app/
 
 RUN npm ci
@@ -19,10 +25,7 @@ COPY ./infrastructure/autodeploy/src /app/src/
 
 COPY ./infrastructure/terraform/cloud-config.example.yml ./infrastructure/terraform/declaration.example.yml /app/terraform/
 COPY ./infrastructure/terraform/monolith/main.tf /app/terraform/monolith/
-COPY ./infrastructure/terraform/serverless-monolith/main.tf /app/terraform/serverless-monolith/
+COPY ./infrastructure/terraform/templates /app/terraform/templates/
 COPY ./infrastructure/terraform/.terraformrc.yandex /root/.terraformrc
-
-COPY ./Dockerfile.monolith.release.yandex ./Dockerfile.monolith.release.yandex.serverless ./package.json ./package-lock.json ./tsconfig.json /app/analytics/
-COPY ./packages /app/analytics/packages/
 
 ENTRYPOINT [ "node", "src/index.ts" ]

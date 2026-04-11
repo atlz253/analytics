@@ -56,7 +56,7 @@ export async function initialize() {
 
   const editorAccount = await getOrCreateAccount({
     name: serviceAccounts.catalogEditor,
-    roles: ["editor"],
+    roles: ["admin"],
   });
 
   await activateEditorAccountProfile();

@@ -7,6 +7,7 @@ import dotenv from "dotenv";
 
 import developConfig from "../config/frontier/develop.js";
 import yandexConfig from "../config/frontier/yandex.js";
+import serverlessYandexConfig from "../config/frontier/yandex.serverless.js";
 
 process.on("uncaughtException", (error) => {
   console.error(error.message);
@@ -20,7 +21,11 @@ process.on("uncaughtException", (error) => {
     ),
   });
   const modules = await new Builder().build(
-    ...(await Promise.all([developConfig(), yandexConfig()])),
+    ...(await Promise.all([
+      developConfig(),
+      yandexConfig(),
+      serverlessYandexConfig(),
+    ])),
   );
   const api = modules["api"] as API;
   await api.listen();

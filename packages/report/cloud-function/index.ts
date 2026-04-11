@@ -2,6 +2,7 @@ import { initEvents } from "@atlz253/events";
 import { tlsCAFile } from "@atlz253/shared/cloud-function/tlsCAFile";
 import { TimeInterval } from "@atlz253/shared/types/timeInterval";
 import { Handler } from "@yandex-cloud/function-types";
+import { SQS } from "aws-sdk";
 
 import { Report } from "../src/index.js";
 
@@ -10,7 +11,9 @@ const initReport = async (): Promise<Report> => {
     // FIXME: исправить
     storage: {
       type: "mongo",
-      host: "mongodb://user2:12345678@rc1b-uumhquflh32vru1k.mdb.yandexcloud.net:27018/",
+      user: process.env.MONGO_USER ?? "",
+      password: process.env.MONGO_PASSWORD ?? "",
+      hosts: process.env.MONGO_HOSTS ?? "",
       options: {
         tls: true,
         tlsCAFile: await tlsCAFile(),
@@ -18,65 +21,80 @@ const initReport = async (): Promise<Report> => {
       },
     },
   });
-  return new Report({ events });
+  return new Report({ dependencies: { events } });
 };
 
-// FIXME: валидация входных данных в yandex functions
-export const users: Handler.Http = async (event) => {
+interface EventInfo {
+  reportType: "users" | "user" | "eventTypes" | "events";
+  event: unknown;
+}
+
+const handleEventInfo = async (eventInfo: EventInfo) => {
   const report = await initReport();
-  return {
-    statusCode: 200,
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({
-      statusCode: 200,
-      users: await report.createUsersReport(
-        JSON.parse(event.body) as { timeInterval: TimeInterval }
-      ),
-    }),
-  };
+  switch (eventInfo.reportType) {
+    case "users":
+      return report.createUsersReport(
+        eventInfo.event as { timeInterval: TimeInterval },
+      );
+    case "user":
+      return report.createUserReport(
+        eventInfo.event as { userUUID: string; timeInterval: TimeInterval },
+      );
+    case "events":
+      return report.createEventsReport(
+        eventInfo.event as { timeInterval: TimeInterval },
+      );
+    case "eventTypes":
+      return report.createEventTypesReport(
+        eventInfo.event as { timeInterval: TimeInterval },
+      );
+  }
 };
 
-export const user: Handler.Http = async (event) => {
-  const report = await initReport();
-  return {
-    statusCode: 200,
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({
-      statusCode: 200,
-      user: await report.createUserReport(
-        JSON.parse(event.body) as {
-          timeInterval: TimeInterval;
-          userUUID: string;
-        }
-      ),
-    }),
-  };
-};
+export const handler: Handler.Http = async (event) => {
+  const responseQueue = new SQS({
+    region: "ru-central1",
+    endpoint: "https://message-queue.api.cloud.yandex.net",
+    credentials: {
+      accessKeyId: process.env.QUEUE_ACCESS_KEY_ID ?? "",
+      secretAccessKey: process.env.QUEUE_SECRET_ACCESS_KEY ?? "",
+    },
+  });
+  const messages: Array<{
+    details: {
+      message: {
+        body: string;
+        message_attributes: Record<
+          string,
+          { data_type: string; string_value: string }
+        >;
+      };
+    };
+    // @ts-expect-error Сообщения точно есть
+  }> = event.messages ?? [];
 
-export const eventTypes: Handler.Http = async (event) => {
-  const report = await initReport();
-  return {
-    statusCode: 200,
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({
-      statusCode: 200,
-      ...(await report.createEventTypesReport(
-        JSON.parse(event.body) as { timeInterval: TimeInterval }
-      )),
-    }),
-  };
-};
+  await Promise.all(
+    messages.map(async (item) => {
+      const message = item.details.message;
+      const eventInfo = JSON.parse(message.body) as EventInfo;
+      const correlationId =
+        message.message_attributes["correlationId"].string_value;
+      const result = await handleEventInfo(eventInfo);
 
-export const events: Handler.Http = async (event) => {
-  const report = await initReport();
-  return {
-    statusCode: 200,
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({
-      statusCode: 200,
-      events: await report.createEventsReport(
-        JSON.parse(event.body) as { timeInterval: TimeInterval }
-      ),
+      await responseQueue
+        .sendMessage({
+          QueueUrl: process.env.QUEUE_RESPONSE_URL ?? "",
+          MessageBody: JSON.stringify(result),
+          MessageAttributes: {
+            correlationId: {
+              DataType: "String",
+              StringValue: correlationId,
+            },
+          },
+        })
+        .promise();
     }),
-  };
+  );
+
+  return { statusCode: 200 };
 };

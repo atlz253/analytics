@@ -1,5 +1,7 @@
 import { existsSync } from "node:fs";
-import { copyFile, readFile, writeFile } from "node:fs/promises";
+import { copyFile, mkdir, readFile, writeFile } from "node:fs/promises";
+
+import { execa } from "execa";
 
 import { instanceNames, serviceAccounts } from "../../constants/index.ts";
 import { db } from "../../db/index.ts";
@@ -8,6 +10,7 @@ import { pushImage } from "../../integration/Docker/features/pushImage/index.ts"
 import { apply as applyTerraform } from "../../integration/Terraform/features/apply/index.ts";
 import { init as initTerraform } from "../../integration/Terraform/features/init/index.ts";
 import { DEFAULT_PROFILE_NAME } from "../../integration/YandexCloud/constants/index.ts";
+import { getCurrentConfig } from "../../integration/YandexCloud/features/config/getCurrentConfig.ts";
 import {
   createCurrentProfileIAMToken,
   createStaticAccessKey,
@@ -24,11 +27,44 @@ type ApplyResult = {
   "mongo-events": {
     name: string;
   };
+  "report-queue-request-url": {
+    url: string;
+    arn: string;
+  };
+  "report-queue-response-url": {
+    url: string;
+    arn: string;
+  };
+  "queues-service-account": {
+    id: string;
+    access_key: string;
+    secret_key: string;
+  };
 };
 
 export async function apply() {
   if (!db.data.monolith.isTerraformInitialized) {
     console.log("⚙️ Инициализация Terraform");
+    const terraformConfig = await readFile(
+      "/app/terraform/templates/serverless-monolith.tf",
+      "utf-8",
+    );
+
+    const currentConfig = await getCurrentConfig();
+    const editedTerraformConfig = terraformConfig.replace(
+      "<идентификатор_каталога>",
+      currentConfig["folder-id"],
+    );
+
+    if (!existsSync("/app/terraform/serverless-monolith")) {
+      await mkdir("/app/terraform/serverless-monolith");
+    }
+
+    await writeFile(
+      "/app/terraform/serverless-monolith/main.tf",
+      editedTerraformConfig,
+    );
+
     await initTerraform({ cwd: "/app/terraform/serverless-monolith" });
     await db.update(
       ({ serverlessMonolith }) =>
@@ -82,14 +118,30 @@ export async function apply() {
   );
 
   const dockerVMEnv = await readFile(
-    "/app/analytics/packages/monolith/.env.yandex.local.example",
+    "/app/analytics/packages/monolith/.env.yandex.serverless.local.example",
     "utf-8",
   );
 
   const editedDockerVMEnv = dockerVMEnv
     .replace("<адрес_хоста>", mongoHostName)
     .replace("<access_key_id>", storageEditorStaticKeyInfo.access_key.key_id)
-    .replace("<secret_access_key_id>", storageEditorStaticKeyInfo.secret);
+    .replace("<secret_access_key_id>", storageEditorStaticKeyInfo.secret)
+    .replace(
+      "<report_queue_request_url>",
+      applyResult["report-queue-request-url"].url,
+    )
+    .replace(
+      "<report_queue_response_url>",
+      applyResult["report-queue-response-url"].url,
+    )
+    .replace(
+      "<report_queue_access_key_id>",
+      applyResult["queues-service-account"].access_key,
+    )
+    .replace(
+      "<report_queue_secret_access_key>",
+      applyResult["queues-service-account"].secret_key,
+    );
 
   await writeFile(
     "/app/analytics/packages/monolith/.env.yandex.serverless.local",
@@ -141,5 +193,80 @@ export async function apply() {
   await setServiceAccount({
     instanceName: instanceNames.containerOptimizedImage,
     serviceAccountName: imagePullerAccount.name,
+  });
+
+  console.log("🛠️ Сборка бессерверных функций");
+
+  const reportFunctionEnv = await readFile(
+    "/app/analytics/packages/report/cloud-function/.env",
+    "utf8",
+  );
+
+  const editedReportFunctionEnv = reportFunctionEnv
+    .replace("<адрес_хоста>", mongoHostName)
+    .replace(
+      "<report_queue_access_key_id>",
+      applyResult["queues-service-account"].access_key,
+    )
+    .replace(
+      "<report_queue_secret_access_key>",
+      applyResult["queues-service-account"].secret_key,
+    )
+    .replace(
+      "<report_queue_response_url>",
+      applyResult["report-queue-response-url"].url,
+    );
+
+  await writeFile(
+    "/app/analytics/packages/report/cloud-function/.env.local",
+    editedReportFunctionEnv,
+  );
+
+  await execa("npm", ["run", "serverless.build"], {
+    cwd: "/app/analytics/packages/report",
+    stdio: "inherit",
+  });
+
+  if (!existsSync("/app/terraform/serverless-monolith-functions")) {
+    await mkdir("/app/terraform/serverless-monolith-functions");
+  }
+
+  await copyFile(
+    "/app/analytics/packages/report/dist/cloud-function/index.zip",
+    "/app/terraform/serverless-monolith-functions/dist.zip",
+  );
+
+  console.log("☁️ Развертывание бессерверных функций");
+
+  const functionsTerraform = await readFile(
+    "/app/terraform/templates/serverless-monolith-functions.tf",
+    "utf-8",
+  );
+
+  const editedFunctionsTerraform = functionsTerraform
+    .replace("<report_queue_id>", applyResult["report-queue-request-url"].arn)
+    .replaceAll(
+      "<queues_service_account_id>",
+      applyResult["queues-service-account"].id,
+    );
+
+  await writeFile(
+    "/app/terraform/serverless-monolith-functions/main.tf",
+    editedFunctionsTerraform,
+  );
+
+  if (!db.data.serverlessMonolith.isServerlessFunctionsTerraformInitialized) {
+    await initTerraform({
+      cwd: "/app/terraform/serverless-monolith-functions",
+    });
+    db.update(
+      ({ serverlessMonolith }) =>
+        (serverlessMonolith.isServerlessFunctionsTerraformInitialized = true),
+    );
+  }
+
+  await applyTerraform({
+    cwd: "/app/terraform/serverless-monolith-functions",
+    autoApprove: true,
   });
 }

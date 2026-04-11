@@ -11,7 +11,7 @@ const SERVICE_ACCOUNT_KEY_FILE_NAME = "key.json";
 export async function activateEditorAccountProfile() {
   const editorAccount = await getOrCreateAccount({
     name: serviceAccounts.catalogEditor,
-    roles: ["editor"],
+    roles: ["admin"],
   });
 
   const catalog = await getCatalogInfoByID(editorAccount.folder_id);

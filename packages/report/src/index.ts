@@ -1,9 +1,13 @@
+import { randomUUID } from "node:crypto";
+
 import { UserActivityEvent } from "@atlz253/events/types";
-import { omit } from "ramda";
+import { SQS } from "aws-sdk";
 
 import { AbstractEvents } from "../../events/src/index.js";
 import { TimeInterval } from "../../shared/src/types/timeInterval.js";
 import { EventTypesReport, UserReport, UsersReport } from "./types.js";
+
+const QUEUE_REPLY_WAIT_TIMEOUT = 60000;
 
 export abstract class AbstractReport {
   abstract createUsersReport(event: {
@@ -71,7 +75,7 @@ export class Report extends AbstractReport {
       (uuid) =>
         (result[uuid] = {
           eventsCount: events.filter((e) => e.userUUID === uuid).length,
-        })
+        }),
     );
     return result;
   }
@@ -86,7 +90,7 @@ export class Report extends AbstractReport {
       e.type in eventsData.events
         ? (eventsData.events[e.type].count =
             eventsData.events[e.type].count + 1)
-        : (eventsData.events[e.type] = { count: 1 })
+        : (eventsData.events[e.type] = { count: 1 }),
     );
     return eventsData;
   }
@@ -97,7 +101,7 @@ export class Report extends AbstractReport {
     events.forEach((e) =>
       report.events[e.type] === undefined
         ? (report.events[e.type] = { count: 1 })
-        : (report.events[e.type].count = report.events[e.type].count + 1)
+        : (report.events[e.type].count = report.events[e.type].count + 1),
     );
     return report;
   }
@@ -109,34 +113,92 @@ export class Report extends AbstractReport {
 }
 
 export class CloudFunctionReport extends AbstractReport {
-  #fallback;
+  #messageQueue: SQS;
+  #requestQueueURL: string;
+  #responseQueueURL: string;
+  #fallback: AbstractReport;
 
   constructor({
+    requestQueueURL,
+    responseQueueURL,
+    credentials,
     dependencies: { fallback },
   }: {
+    requestQueueURL: string;
+    responseQueueURL: string;
+    credentials: {
+      accessKeyId: string;
+      secretAccessKey: string;
+    };
     dependencies: { fallback: AbstractReport };
   }) {
     super();
     this.#fallback = fallback;
+    this.#requestQueueURL = requestQueueURL;
+    this.#responseQueueURL = responseQueueURL;
+    this.#messageQueue = new SQS({
+      region: "ru-central1",
+      endpoint: "https://message-queue.api.cloud.yandex.net",
+      credentials: credentials,
+    });
   }
 
   async createUsersReport(event: {
     timeInterval: TimeInterval;
   }): Promise<UsersReport> {
     try {
-      const response = await fetch(
-        // TODO: вынести хост в .env
-        "https://d5dabihqt2mj59hvr4c0.svoluuab.apigw.yandexcloud.net/report/users",
-        {
-          method: "POST",
-          headers: {
-            "content-type": "application/json",
+      const correlationId = randomUUID();
+
+      await this.#messageQueue
+        .sendMessage({
+          QueueUrl: this.#requestQueueURL,
+          MessageBody: JSON.stringify({
+            reportType: "users",
+            event,
+          }),
+          MessageAttributes: {
+            correlationId: {
+              DataType: "String",
+              StringValue: correlationId,
+            },
+            replyQueueUrl: {
+              DataType: "String",
+              StringValue: this.#responseQueueURL,
+            },
           },
-          body: JSON.stringify(event),
+        })
+        .promise();
+
+      const started = Date.now();
+
+      while (Date.now() - started < QUEUE_REPLY_WAIT_TIMEOUT) {
+        const res = await this.#messageQueue
+          .receiveMessage({
+            QueueUrl: this.#responseQueueURL,
+            WaitTimeSeconds: 20,
+            MaxNumberOfMessages: 10,
+            MessageAttributeNames: ["All"],
+          })
+          .promise();
+
+        for (const msg of res.Messages || []) {
+          const replyCorrelationId =
+            msg.MessageAttributes?.correlationId?.StringValue;
+
+          if (replyCorrelationId === correlationId) {
+            await this.#messageQueue
+              .deleteMessage({
+                QueueUrl: this.#responseQueueURL,
+                ReceiptHandle: msg.ReceiptHandle!,
+              })
+              .promise();
+
+            return JSON.parse(msg.Body!);
+          }
         }
-      );
-      const json = await response.json();
-      return omit(["statusCode"], json);
+      }
+
+      throw new Error("Истекло время ожидания ответа");
     } catch (error) {
       console.warn("Вызов Cloud Function закончился неудачей:", error);
       return await this.#fallback.createUsersReport(event);
@@ -148,18 +210,58 @@ export class CloudFunctionReport extends AbstractReport {
     timeInterval: TimeInterval;
   }): Promise<UserReport> {
     try {
-      const response = await fetch(
-        "https://d5dabihqt2mj59hvr4c0.svoluuab.apigw.yandexcloud.net/report/user",
-        {
-          method: "POST",
-          headers: {
-            "content-type": "application/json",
+      const correlationId = randomUUID();
+
+      await this.#messageQueue
+        .sendMessage({
+          QueueUrl: this.#requestQueueURL,
+          MessageBody: JSON.stringify({
+            reportType: "user",
+            event,
+          }),
+          MessageAttributes: {
+            correlationId: {
+              DataType: "String",
+              StringValue: correlationId,
+            },
+            replyQueueUrl: {
+              DataType: "String",
+              StringValue: this.#responseQueueURL,
+            },
           },
-          body: JSON.stringify(event),
+        })
+        .promise();
+
+      const started = Date.now();
+
+      while (Date.now() - started < QUEUE_REPLY_WAIT_TIMEOUT) {
+        const res = await this.#messageQueue
+          .receiveMessage({
+            QueueUrl: this.#responseQueueURL,
+            WaitTimeSeconds: 20,
+            MaxNumberOfMessages: 10,
+            MessageAttributeNames: ["All"],
+          })
+          .promise();
+
+        for (const msg of res.Messages || []) {
+          const replyCorrelationId =
+            msg.MessageAttributes?.correlationId?.StringValue;
+
+          if (replyCorrelationId === correlationId) {
+            await this.#messageQueue
+              .deleteMessage({
+                QueueUrl: this.#responseQueueURL,
+                ReceiptHandle: msg.ReceiptHandle!,
+              })
+              .promise();
+
+            return JSON.parse(msg.Body!);
+          }
         }
-      );
-      const json = await response.json();
-      return omit(["statusCode"], json) as UserReport;
+      }
+
+      throw new Error("Истекло время ожидания ответа");
     } catch (error) {
       console.warn("Вызов Cloud Function закончился неудачей:", error);
       return await this.#fallback.createUserReport(event);
@@ -170,18 +272,58 @@ export class CloudFunctionReport extends AbstractReport {
     timeInterval: TimeInterval;
   }): Promise<EventTypesReport> {
     try {
-      const response = await fetch(
-        "https://d5dabihqt2mj59hvr4c0.svoluuab.apigw.yandexcloud.net/report/eventTypes",
-        {
-          method: "POST",
-          headers: {
-            "content-type": "application/json",
+      const correlationId = randomUUID();
+
+      await this.#messageQueue
+        .sendMessage({
+          QueueUrl: this.#requestQueueURL,
+          MessageBody: JSON.stringify({
+            reportType: "eventTypes",
+            event,
+          }),
+          MessageAttributes: {
+            correlationId: {
+              DataType: "String",
+              StringValue: correlationId,
+            },
+            replyQueueUrl: {
+              DataType: "String",
+              StringValue: this.#responseQueueURL,
+            },
           },
-          body: JSON.stringify(event),
+        })
+        .promise();
+
+      const started = Date.now();
+
+      while (Date.now() - started < QUEUE_REPLY_WAIT_TIMEOUT) {
+        const res = await this.#messageQueue
+          .receiveMessage({
+            QueueUrl: this.#responseQueueURL,
+            WaitTimeSeconds: 20,
+            MaxNumberOfMessages: 10,
+            MessageAttributeNames: ["All"],
+          })
+          .promise();
+
+        for (const msg of res.Messages || []) {
+          const replyCorrelationId =
+            msg.MessageAttributes?.correlationId?.StringValue;
+
+          if (replyCorrelationId === correlationId) {
+            await this.#messageQueue
+              .deleteMessage({
+                QueueUrl: this.#responseQueueURL,
+                ReceiptHandle: msg.ReceiptHandle!,
+              })
+              .promise();
+
+            return JSON.parse(msg.Body!);
+          }
         }
-      );
-      const json = await response.json();
-      return omit(["statusCode"], json) as EventTypesReport;
+      }
+
+      throw new Error("Истекло время ожидания ответа");
     } catch (error) {
       console.warn("Вызов Cloud Function закончился неудачей:", error);
       return await this.#fallback.createEventTypesReport(event);
@@ -192,19 +334,58 @@ export class CloudFunctionReport extends AbstractReport {
     timeInterval: TimeInterval;
   }): Promise<Array<UserActivityEvent>> {
     try {
-      const response = await fetch(
-        "https://d5dabihqt2mj59hvr4c0.svoluuab.apigw.yandexcloud.net/report/events",
-        {
-          method: "POST",
-          headers: {
-            "content-type": "application/json",
+      const correlationId = randomUUID();
+
+      await this.#messageQueue
+        .sendMessage({
+          QueueUrl: this.#requestQueueURL,
+          MessageBody: JSON.stringify({
+            reportType: "events",
+            event,
+          }),
+          MessageAttributes: {
+            correlationId: {
+              DataType: "String",
+              StringValue: correlationId,
+            },
+            replyQueueUrl: {
+              DataType: "String",
+              StringValue: this.#responseQueueURL,
+            },
           },
-          body: JSON.stringify(event),
+        })
+        .promise();
+
+      const started = Date.now();
+
+      while (Date.now() - started < QUEUE_REPLY_WAIT_TIMEOUT) {
+        const res = await this.#messageQueue
+          .receiveMessage({
+            QueueUrl: this.#responseQueueURL,
+            WaitTimeSeconds: 20,
+            MaxNumberOfMessages: 10,
+            MessageAttributeNames: ["All"],
+          })
+          .promise();
+
+        for (const msg of res.Messages || []) {
+          const replyCorrelationId =
+            msg.MessageAttributes?.correlationId?.StringValue;
+
+          if (replyCorrelationId === correlationId) {
+            await this.#messageQueue
+              .deleteMessage({
+                QueueUrl: this.#responseQueueURL,
+                ReceiptHandle: msg.ReceiptHandle!,
+              })
+              .promise();
+
+            return JSON.parse(msg.Body!);
+          }
         }
-      );
-      const json = await response.json();
-      if (json.errorCode) throw new Error(JSON.stringify(json));
-      return omit(["statusCode"], json) as Array<UserActivityEvent>;
+      }
+
+      throw new Error("Истекло время ожидания ответа");
     } catch (error) {
       console.warn("Вызов Cloud Function закончился неудачей:", error);
       return await this.#fallback.createEventsReport(event);

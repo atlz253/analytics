@@ -20,7 +20,7 @@ export async function destroy() {
   await activateProfile(DEFAULT_PROFILE_NAME);
   const editorAccount = await getOrCreateAccount({
     name: serviceAccounts.catalogEditor,
-    roles: ["editor"],
+    roles: ["admin"],
   });
 
   await activateEditorAccountProfile();
@@ -50,12 +50,16 @@ export async function destroy() {
 
   console.log("🗑️ Удаление данных из Object Storage");
 
-  removeFromS3({
-    URI: `s3://${instanceNames.objectStorage}/`,
-    recursive: true,
-  });
+  try {
+    await removeFromS3({
+      URI: `s3://${instanceNames.objectStorage}/`,
+      recursive: true,
+    });
+  } catch (error) {
+    console.error(error);
+  }
 
   console.log("🗑️ Удаление сервисов");
 
-  destroyTerraform({ cwd: "/app/terraform/monolith", autoApprove: true });
+  await destroyTerraform({ cwd: "/app/terraform/monolith", autoApprove: true });
 }
