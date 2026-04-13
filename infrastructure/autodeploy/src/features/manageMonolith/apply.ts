@@ -7,6 +7,7 @@ import { db } from "../../db/index.ts";
 import { buildImage } from "../../integration/Docker/features/buildImage/index.ts";
 import { pushImage } from "../../integration/Docker/features/pushImage/index.ts";
 import { apply as applyTerraform } from "../../integration/Terraform/features/apply/index.ts";
+import { output as getTerraformOutput } from "../../integration/Terraform/features/getOutput/index.ts";
 import { init as initTerraform } from "../../integration/Terraform/features/init/index.ts";
 import { DEFAULT_PROFILE_NAME } from "../../integration/YandexCloud/constants/index.ts";
 import {
@@ -20,10 +21,14 @@ import { activateEditorAccountProfile } from "../manageEditorAccount/index.ts";
 
 type ApplyResult = {
   "container-registry": {
-    registry_id: string;
+    value: {
+      registry_id: string;
+    };
   };
   "mongo-events": {
-    name: string;
+    value: {
+      name: string;
+    };
   };
 };
 
@@ -59,12 +64,19 @@ export async function apply() {
 
   await activateEditorAccountProfile();
 
-  const applyResult = (await applyTerraform({
+  await applyTerraform({
     cwd: "/app/terraform/monolith",
     autoApprove: true,
-  })) as ApplyResult;
-  const registryId = applyResult["container-registry"]["registry_id"];
-  const mongoHostName = applyResult["mongo-events"]["name"];
+  });
+
+  const applyResult = JSON.parse(
+    await getTerraformOutput({
+      jsonOutput: true,
+      cwd: "/app/terraform/monolith",
+    }),
+  ) as ApplyResult;
+  const registryId = applyResult["container-registry"]["value"]["registry_id"];
+  const mongoHostName = applyResult["mongo-events"]["value"]["name"];
 
   console.log("🐋 Сборка Docker image с монолитной версией системы");
 

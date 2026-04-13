@@ -38,3 +38,31 @@ resource "yandex_function_trigger" "report_trigger" {
         service_account_id = "<queues_service_account_id>"
     }
 }
+
+resource "yandex_function" "archive_function" {
+    name = "archive-function"
+    runtime = "nodejs22"
+    user_hash = filesha256("dist-archive.zip")
+    memory = "1024"
+    entrypoint = "index.handler"
+    execution_timeout  = "300"
+    content {
+        zip_filename = "./dist-archive.zip"
+    }
+}
+
+resource "yandex_function_trigger" "archive_trigger" {
+    name = "archive-trigger"
+    message_queue {
+        queue_id = "<archive_queue_id>"
+        service_account_id = "<queues_service_account_id>"
+        batch_size = "1"
+        batch_cutoff = "10"
+        visibility_timeout = 600
+    }
+    function {
+        id = yandex_function.archive_function.id
+        tag = "$latest"
+        service_account_id = "<queues_service_account_id>"
+    }
+}

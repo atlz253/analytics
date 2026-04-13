@@ -61,10 +61,14 @@ export async function destroy() {
 
   console.log("🗑️ Удаление бессерверных функций");
 
-  await destroyTerraform({
-    cwd: "/app/terraform/serverless-monolith-functions",
-    autoApprove: true,
-  });
+  try {
+    await destroyTerraform({
+      cwd: "/app/terraform/serverless-monolith-functions",
+      autoApprove: true,
+    });
+  } catch (error) {
+    console.log(error);
+  }
 
   console.log("🗑️ Удаление сервисов");
 

@@ -164,6 +164,52 @@ resource "yandex_message_queue" "report_deadletter_queue_response" {
   depends_on = [ yandex_resourcemanager_folder_iam_member.queues_service_account_editor ]
 }
 
+resource "yandex_message_queue" "archive_queue_request" {
+  name = "archive_queue_request"
+  visibility_timeout_seconds = 600
+  receive_wait_time_seconds  = 20
+  message_retention_seconds  = 1209600
+  redrive_policy = jsonencode({
+    deadLetterTargetArn = yandex_message_queue.archive_deadletter_queue_request.arn
+    maxReceiveCount     = 3
+  })
+
+  access_key = yandex_iam_service_account_static_access_key.queues_service_account_static_key.access_key
+  secret_key = yandex_iam_service_account_static_access_key.queues_service_account_static_key.secret_key
+  depends_on = [ yandex_resourcemanager_folder_iam_member.queues_service_account_editor ]
+}
+
+resource "yandex_message_queue" "archive_deadletter_queue_request" {
+  name = "archive_deadletter_queue_request"
+
+  access_key = yandex_iam_service_account_static_access_key.queues_service_account_static_key.access_key
+  secret_key = yandex_iam_service_account_static_access_key.queues_service_account_static_key.secret_key
+  depends_on = [ yandex_resourcemanager_folder_iam_member.queues_service_account_editor ]
+}
+
+resource "yandex_message_queue" "archive_queue_response" {
+  name = "archive_queue_response"
+  visibility_timeout_seconds = 600
+  receive_wait_time_seconds  = 20
+  message_retention_seconds  = 1209600
+  redrive_policy = jsonencode({
+    deadLetterTargetArn = yandex_message_queue.archive_deadletter_queue_response.arn
+    maxReceiveCount     = 3
+  })
+
+  access_key = yandex_iam_service_account_static_access_key.queues_service_account_static_key.access_key
+  secret_key = yandex_iam_service_account_static_access_key.queues_service_account_static_key.secret_key
+  depends_on = [ yandex_resourcemanager_folder_iam_member.queues_service_account_editor ]
+}
+
+resource "yandex_message_queue" "archive_deadletter_queue_response" {
+  name = "archive_deadletter_queue_response"
+
+  access_key = yandex_iam_service_account_static_access_key.queues_service_account_static_key.access_key
+  secret_key = yandex_iam_service_account_static_access_key.queues_service_account_static_key.secret_key
+  depends_on = [ yandex_resourcemanager_folder_iam_member.queues_service_account_editor ]
+}
+
 output "container-optimized-image" {
   description = "Container optimized image"
   value = {
@@ -197,6 +243,20 @@ output "report-queue-response-url" {
   value = {
     url = yandex_message_queue.report_queue_response.id
     arn = yandex_message_queue.report_queue_response.arn
+  }
+}
+
+output "archive-queue-request-url" {
+  value = {
+    url = yandex_message_queue.archive_queue_request.id
+    arn = yandex_message_queue.archive_queue_request.arn
+  }
+}
+
+output "archive-queue-response-url" {
+  value = {
+    url = yandex_message_queue.archive_queue_response.id
+    arn = yandex_message_queue.archive_queue_response.arn
   }
 }
 
