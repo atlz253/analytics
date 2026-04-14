@@ -4,6 +4,7 @@
   "version": "0.0.0",
   "main": "src/index.ts",
   "scripts": {
-    "serverless.build": "tsx cloud-function/esbuild.ts && node ../../scripts/zip.cjs ./dist/cloud-function/index.zip ./dist/cloud-function/index.js"
+    "serverless.build": "tsx cloud-function/esbuild.ts && node ../../scripts/zip.cjs ./dist/cloud-function/index.zip ./dist/cloud-function/index.js",
+    "serverless.request.build": "tsx request-cloud-function/esbuild.ts && node ../../scripts/zip.cjs ./dist/request-cloud-function/index.zip ./dist/request-cloud-function/index.js"
   }
 }

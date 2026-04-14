@@ -27,6 +27,18 @@ type ApplyResult = {
       arn: string;
     };
   };
+  "report-queue-request-url": {
+    value: {
+      url: string;
+      arn: string;
+    };
+  };
+  "report-queue-response-url": {
+    value: {
+      url: string;
+      arn: string;
+    };
+  };
   "queues-service-account": {
     value: {
       id: string;
@@ -173,6 +185,81 @@ export async function apply() {
     "/app/terraform/serverless-functions/dist-event-request.zip",
   );
 
+  console.log("🛠️ Сборка бессерверных функций модуля отчетов");
+
+  const reportFunctionEnv = await readFile(
+    "/app/analytics/packages/report/cloud-function/.env",
+    "utf8",
+  );
+
+  const editedReportFunctionEnv = reportFunctionEnv
+    .replace("<адрес_хоста>", mongoHostName)
+    .replace(
+      "<report_queue_access_key_id>",
+      applyResult["queues-service-account"]["value"].access_key,
+    )
+    .replace(
+      "<report_queue_secret_access_key>",
+      applyResult["queues-service-account"]["value"].secret_key,
+    )
+    .replace(
+      "<report_queue_response_url>",
+      applyResult["report-queue-response-url"]["value"].url,
+    );
+
+  await writeFile(
+    "/app/analytics/packages/report/cloud-function/.env.local",
+    editedReportFunctionEnv,
+  );
+
+  await execa("npm", ["run", "serverless.build"], {
+    cwd: "/app/analytics/packages/report",
+    stdio: "inherit",
+  });
+
+  await copyFile(
+    "/app/analytics/packages/report/dist/cloud-function/index.zip",
+    "/app/terraform/serverless-functions/dist.zip",
+  );
+
+  const reportRequestFunctionEnv = await readFile(
+    "/app/analytics/packages/report/request-cloud-function/.env",
+    "utf8",
+  );
+
+  const editedReportRequestFunctionEnv = reportRequestFunctionEnv
+    .replace(
+      "<queue_access_key_id>",
+      applyResult["queues-service-account"]["value"]["access_key"],
+    )
+    .replace(
+      "<queue_secret_access_key>",
+      applyResult["queues-service-account"]["value"]["secret_key"],
+    )
+    .replace(
+      "<request_queue_url>",
+      applyResult["report-queue-request-url"]["value"]["url"],
+    )
+    .replace(
+      "<response_queue_url>",
+      applyResult["report-queue-response-url"]["value"]["url"],
+    );
+
+  await writeFile(
+    "/app/analytics/packages/report/request-cloud-function/.env.local",
+    editedReportRequestFunctionEnv,
+  );
+
+  await execa("npm", ["run", "serverless.request.build"], {
+    cwd: "/app/analytics/packages/report",
+    stdio: "inherit",
+  });
+
+  await copyFile(
+    "/app/analytics/packages/report/dist/request-cloud-function/index.zip",
+    "/app/terraform/serverless-functions/dist-report-request.zip",
+  );
+
   console.log("☁️ Развертывание бессерверных функций");
 
   const functionsTerraform = await readFile(
@@ -185,6 +272,10 @@ export async function apply() {
     .replace(
       "<event_queue_id>",
       applyResult["event-queue-request-url"]["value"].arn,
+    )
+    .replace(
+      "<report_queue_id>",
+      applyResult["report-queue-request-url"]["value"]["arn"],
     )
     .replaceAll(
       "<queues_service_account_id>",

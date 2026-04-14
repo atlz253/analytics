@@ -66,6 +66,82 @@ resource "yandex_function" "event_request_function" {
     }
 }
 
+resource "yandex_function" "report_function" {
+    name = "report-function"
+    runtime = "nodejs22"
+    user_hash = filesha256("dist.zip")
+    memory = "1024"
+    entrypoint = "index.handler"
+    execution_timeout  = "300"
+    content {
+        zip_filename = "./dist.zip"
+    }
+}
+
+resource "yandex_function_trigger" "report_trigger" {
+    name = "report-trigger"
+    message_queue {
+        queue_id = "<report_queue_id>"
+        service_account_id = "<queues_service_account_id>"
+        batch_size = "1"
+        batch_cutoff = "10"
+        visibility_timeout = 600
+    }
+    function {
+        id = yandex_function.report_function.id
+        tag = "$latest"
+        service_account_id = "<queues_service_account_id>"
+    }
+}
+
+resource "yandex_function" "report_request_function_users" {
+    name = "report-request-function-users"
+    runtime = "nodejs22"
+    user_hash = filesha256("dist-report-request.zip")
+    memory = "1024"
+    entrypoint = "index.handleUsersReport"
+    execution_timeout  = "300"
+    content {
+        zip_filename = "./dist-report-request.zip"
+    }
+}
+
+resource "yandex_function" "report_request_function_user" {
+    name = "report-request-function-user"
+    runtime = "nodejs22"
+    user_hash = filesha256("dist-report-request.zip")
+    memory = "1024"
+    entrypoint = "index.handleUserReport"
+    execution_timeout  = "300"
+    content {
+        zip_filename = "./dist-report-request.zip"
+    }
+}
+
+resource "yandex_function" "report_request_function_events" {
+    name = "report-request-function-events"
+    runtime = "nodejs22"
+    user_hash = filesha256("dist-report-request.zip")
+    memory = "1024"
+    entrypoint = "index.handleEventsReport"
+    execution_timeout  = "300"
+    content {
+        zip_filename = "./dist-report-request.zip"
+    }
+}
+
+resource "yandex_function" "report_request_function_event_types" {
+    name = "report-request-function-event-types"
+    runtime = "nodejs22"
+    user_hash = filesha256("dist-report-request.zip")
+    memory = "1024"
+    entrypoint = "index.handleEventTypesReport"
+    execution_timeout  = "300"
+    content {
+        zip_filename = "./dist-report-request.zip"
+    }
+}
+
 resource "yandex_api_gateway" "serverless_gateway" {
     name = "serverless-gateway"
     execution_timeout = "300"
@@ -80,6 +156,38 @@ paths:
         x-yc-apigateway-integration:
             payload_format_version: '0.1'
             function_id: ${yandex_function.event_request_function.id}
+            tag: $latest
+            type: cloud_functions
+            service_account_id: ${yandex_iam_service_account.function_invoker_account.id}
+  /report/users:
+    post:
+        x-yc-apigateway-integration:
+            payload_format_version: '0.1'
+            function_id: ${yandex_function.report_request_function_users.id}
+            tag: $latest
+            type: cloud_functions
+            service_account_id: ${yandex_iam_service_account.function_invoker_account.id}
+  /report/user:
+    post:
+        x-yc-apigateway-integration:
+            payload_format_version: '0.1'
+            function_id: ${yandex_function.report_request_function_user.id}
+            tag: $latest
+            type: cloud_functions
+            service_account_id: ${yandex_iam_service_account.function_invoker_account.id}
+  /report/events:
+    post:
+        x-yc-apigateway-integration:
+            payload_format_version: '0.1'
+            function_id: ${yandex_function.report_request_function_events.id}
+            tag: $latest
+            type: cloud_functions
+            service_account_id: ${yandex_iam_service_account.function_invoker_account.id}
+  /report/eventTypes:
+    post:
+        x-yc-apigateway-integration:
+            payload_format_version: '0.1'
+            function_id: ${yandex_function.report_request_function_event_types.id}
             tag: $latest
             type: cloud_functions
             service_account_id: ${yandex_iam_service_account.function_invoker_account.id}
