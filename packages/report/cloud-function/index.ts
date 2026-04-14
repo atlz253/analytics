@@ -8,7 +8,6 @@ import { Report } from "../src/index.js";
 
 const initReport = async (): Promise<Report> => {
   const events = await initEvents({
-    // FIXME: исправить
     storage: {
       type: "mongo",
       user: process.env.MONGO_USER ?? "",

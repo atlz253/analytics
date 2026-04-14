@@ -8,6 +8,10 @@ interface DataBase {
     isTerraformInitialized: boolean;
     isServerlessFunctionsTerraformInitialized: boolean;
   };
+  serverless: {
+    isTerraformInitialized: boolean;
+    isServerlessFunctionsTerraformInitialized: boolean;
+  };
   ssh: {
     key: string;
     user: string;
@@ -17,6 +21,10 @@ interface DataBase {
 const defaultData = {
   monolith: { isTerraformInitialized: false },
   serverlessMonolith: {
+    isTerraformInitialized: false,
+    isServerlessFunctionsTerraformInitialized: false,
+  },
+  serverless: {
     isTerraformInitialized: false,
     isServerlessFunctionsTerraformInitialized: false,
   },

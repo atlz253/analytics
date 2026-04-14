@@ -4,6 +4,7 @@ import { select } from "@inquirer/prompts";
 
 import { initialize } from "./features/initialize/index.ts";
 import { openManageMonolithMenu } from "./features/manageMonolith/index.ts";
+import { openManageServerlessMenu } from "./features/manageServerless/index.ts";
 import { openManageServerlessMonolithMenu } from "./features/manageServerlessMonolith/openManageServerlessMonolithMenu.ts";
 
 console.log("⚙️ Инициализация");
@@ -18,6 +19,7 @@ while (true) {
         name: "Управление монолитной версией системы (с бессерверными функциями)",
         value: "serverless-monolith",
       },
+      { name: "Управление бессерверной версией системы", value: "serverless" },
       { name: "Выход", value: "exit" },
     ],
   });
@@ -29,6 +31,9 @@ while (true) {
         break;
       case "serverless-monolith":
         await openManageServerlessMonolithMenu();
+        break;
+      case "serverless":
+        await openManageServerlessMenu();
         break;
       case "exit":
         exit();
