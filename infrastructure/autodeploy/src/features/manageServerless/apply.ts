@@ -2,11 +2,14 @@ import { execa } from "execa";
 import { existsSync } from "fs";
 import { copyFile, mkdir, readFile, writeFile } from "fs/promises";
 
+import { serviceAccounts } from "../../constants/index.ts";
 import { db } from "../../db/index.ts";
 import { apply as applyTerraform } from "../../integration/Terraform/features/apply/index.ts";
 import { output as getTerraformOutput } from "../../integration/Terraform/features/getOutput/index.ts";
 import { init as initTerraform } from "../../integration/Terraform/features/init/index.ts";
 import { getCurrentConfig } from "../../integration/YandexCloud/features/config/index.ts";
+import { createStaticAccessKey } from "../../integration/YandexCloud/features/iamKey/index.ts";
+import { getOrCreateAccount } from "../../integration/YandexCloud/features/manageServiceAccount/index.ts";
 import { activateEditorAccountProfile } from "../manageEditorAccount/index.ts";
 
 type ApplyResult = {
@@ -34,6 +37,18 @@ type ApplyResult = {
     };
   };
   "report-queue-response-url": {
+    value: {
+      url: string;
+      arn: string;
+    };
+  };
+  "archive-queue-request-url": {
+    value: {
+      url: string;
+      arn: string;
+    };
+  };
+  "archive-queue-response-url": {
     value: {
       url: string;
       arn: string;
@@ -260,6 +275,92 @@ export async function apply() {
     "/app/terraform/serverless-functions/dist-report-request.zip",
   );
 
+  console.log("🛠️ Сборка бессерверных функций модуля архивации");
+
+  const archiveFunctionEnv = await readFile(
+    "/app/analytics/packages/archive/cloud-function/.env",
+    "utf8",
+  );
+
+  const storageEditorAccount = await getOrCreateAccount({
+    name: serviceAccounts.storageEditor,
+    roles: ["kms.keys.encrypterDecrypter", "kms.keys.user", "storage.editor"],
+  });
+
+  const storageEditorStaticKeyInfo = await createStaticAccessKey(
+    storageEditorAccount.name,
+  );
+
+  const editedArchiveFunctionEnv = archiveFunctionEnv
+    .replace("<адрес_хоста>", mongoHostName)
+    .replace(
+      "<archive_queue_access_key_id>",
+      applyResult["queues-service-account"].value.access_key,
+    )
+    .replace(
+      "<archive_queue_secret_access_key>",
+      applyResult["queues-service-account"].value.secret_key,
+    )
+    .replace(
+      "<archive_queue_response_url>",
+      applyResult["archive-queue-response-url"].value.url,
+    )
+    .replace("<ys3_access_key>", storageEditorStaticKeyInfo.access_key.key_id)
+    .replace("<ys3_secret_access_key>", storageEditorStaticKeyInfo.secret);
+
+  await writeFile(
+    "/app/analytics/packages/archive/cloud-function/.env.local",
+    editedArchiveFunctionEnv,
+  );
+
+  await execa("npm", ["run", "serverless.build"], {
+    cwd: "/app/analytics/packages/archive",
+    stdio: "inherit",
+  });
+
+  await copyFile(
+    "/app/analytics/packages/archive/dist/cloud-function/index.zip",
+    "/app/terraform/serverless-functions/dist-archive.zip",
+  );
+
+  const archiveRequestEnv = await readFile(
+    "/app/analytics/packages/archive/request-cloud-function/.env",
+    "utf8",
+  );
+
+  const editedArchiveRequestEnv = archiveRequestEnv
+    .replace(
+      "<report_queue_access_key_id>",
+      applyResult["queues-service-account"]["value"]["access_key"],
+    )
+    .replace(
+      "<report_queue_secret_access_key>",
+      applyResult["queues-service-account"]["value"]["secret_key"],
+    )
+    .replace(
+      "<request_queue_url>",
+      applyResult["archive-queue-request-url"]["value"]["url"],
+    )
+    .replace(
+      "<response_queue_url>",
+      applyResult["archive-queue-response-url"]["value"]["url"],
+    );
+
+  await writeFile(
+    "/app/analytics/packages/archive/request-cloud-function/.env.local",
+    editedArchiveRequestEnv,
+  );
+
+  await execa("npm", ["run", "serverless.request.build"], {
+    cwd: "/app/analytics/packages/archive",
+    stdio: "inherit",
+  });
+
+  await copyFile(
+    "/app/analytics/packages/archive/dist/request-cloud-function/index.zip",
+    "/app/terraform/serverless-functions/dist-archive-request.zip",
+  );
+
   console.log("☁️ Развертывание бессерверных функций");
 
   const functionsTerraform = await readFile(
@@ -276,6 +377,10 @@ export async function apply() {
     .replace(
       "<report_queue_id>",
       applyResult["report-queue-request-url"]["value"]["arn"],
+    )
+    .replace(
+      "<archive_queue_id>",
+      applyResult["archive-queue-request-url"]["value"]["arn"],
     )
     .replaceAll(
       "<queues_service_account_id>",

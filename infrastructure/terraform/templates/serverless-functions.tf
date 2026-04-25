@@ -142,6 +142,46 @@ resource "yandex_function" "report_request_function_event_types" {
     }
 }
 
+resource "yandex_function" "archive_function" {
+    name = "archive-function"
+    runtime = "nodejs22"
+    user_hash = filesha256("dist-archive.zip")
+    memory = "1024"
+    entrypoint = "index.handler"
+    execution_timeout  = "300"
+    content {
+        zip_filename = "./dist-archive.zip"
+    }
+}
+
+resource "yandex_function_trigger" "archive_trigger" {
+    name = "archive-trigger"
+    message_queue {
+        queue_id = "<archive_queue_id>"
+        service_account_id = "<queues_service_account_id>"
+        batch_size = "1"
+        batch_cutoff = "10"
+        visibility_timeout = 600
+    }
+    function {
+        id = yandex_function.archive_function.id
+        tag = "$latest"
+        service_account_id = "<queues_service_account_id>"
+    }
+}
+
+resource "yandex_function" "archive_request_function" {
+    name = "archive-request-function"
+    runtime = "nodejs22"
+    user_hash = filesha256("dist-archive-request.zip")
+    memory = "1024"
+    entrypoint = "index.handler"
+    execution_timeout  = "300"
+    content {
+        zip_filename = "./dist-archive-request.zip"
+    }
+}
+
 resource "yandex_api_gateway" "serverless_gateway" {
     name = "serverless-gateway"
     execution_timeout = "300"
@@ -188,6 +228,14 @@ paths:
         x-yc-apigateway-integration:
             payload_format_version: '0.1'
             function_id: ${yandex_function.report_request_function_event_types.id}
+            tag: $latest
+            type: cloud_functions
+            service_account_id: ${yandex_iam_service_account.function_invoker_account.id}
+  /archive/events:
+    post:
+        x-yc-apigateway-integration:
+            payload_format_version: '0.1'
+            function_id: ${yandex_function.archive_request_function.id}
             tag: $latest
             type: cloud_functions
             service_account_id: ${yandex_iam_service_account.function_invoker_account.id}
