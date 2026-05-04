@@ -43,7 +43,7 @@ services:
       - k6-network
 
   grafana-image-renderer:
-    image: grafana/grafana-image-renderer:latest
+    image: grafana/grafana-image-renderer:v4.0.20
     container_name: grafana-image-renderer
     ports:
       - "8082:8082"
