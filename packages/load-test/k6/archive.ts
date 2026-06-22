@@ -1,10 +1,14 @@
 import { faker } from "@faker-js/faker";
 import { check, sleep } from "k6";
 import http from "k6/http";
+import { Options } from "k6/options";
+
+const SERVER_URL = "http://host.docker.internal:3000";
 
 faker.seed(27);
 
-export const options = {
+export const options: Options = {
+  setupTimeout: "20m",
   stages: [
     { duration: "2m", target: 500 },
     { duration: "5m", target: 500 },
@@ -73,31 +77,30 @@ export function setup() {
   // Отправляем 100 событий для создания начального пула данных
   for (let i = 0; i < 100; i++) {
     const payload = generateEventPayload();
-    http.post(
-      "http://host.docker.internal:3000/event",
-      JSON.stringify(payload),
-      { headers: { "Content-Type": "application/json" } }
-    );
+    http.post(`${SERVER_URL}/event`, JSON.stringify(payload), {
+      timeout: "10m",
+      headers: { "Content-Type": "application/json" },
+    });
   }
   // Проверяем доступность archive эндпоинта
   const testPayload = {
     timeInterval: { start: "2024-04-01", end: "2024-12-01" },
   };
   const response = http.post(
-    "http://host.docker.internal:3000/archive/events",
+    `${SERVER_URL}/archive/events`,
     JSON.stringify(testPayload),
-    { headers: { "Content-Type": "application/json" } }
+    { timeout: "10m", headers: { "Content-Type": "application/json" } },
   );
   if (response.status !== 200) {
     console.warn(
-      `Предупреждение: archive эндпоинт отвечает со статусом ${response.status}`
+      `Предупреждение: archive эндпоинт отвечает со статусом ${response.status}`,
     );
   } else {
     console.log("Archive эндпоинт доступен и работает корректно");
   }
   return {
     startTime: new Date().toISOString(),
-    targetUrl: "http://host.docker.internal:3000/archive/events",
+    targetUrl: `${SERVER_URL}/archive/events`,
     minDate,
     maxDate,
   };
@@ -107,12 +110,13 @@ export default function () {
   // Отправляем событие на /event
   const eventPayload = generateEventPayload();
   const eventResponse = http.post(
-    "http://host.docker.internal:3000/event",
+    `${SERVER_URL}/event`,
     JSON.stringify(eventPayload),
     {
+      timeout: "10m",
       headers: { "Content-Type": "application/json" },
       tags: { endpoint: "event", test_scenario: "load_test" },
-    }
+    },
   );
 
   check(eventResponse, {
@@ -136,12 +140,13 @@ export default function () {
     const archivePayload = generateArchivePayload();
     if (archivePayload) {
       const archiveResponse = http.post(
-        "http://host.docker.internal:3000/archive/events",
+        `${SERVER_URL}/archive/events`,
         JSON.stringify(archivePayload),
         {
+          timeout: "10m",
           headers: { "Content-Type": "application/json" },
           tags: { endpoint: "archive", test_scenario: "load_test" },
-        }
+        },
       );
 
       const archiveChecks = check(archiveResponse, {
@@ -166,6 +171,7 @@ export default function () {
           const archiveBody = JSON.parse(archiveResponse.body);
           if (archiveBody.archiveUrl) {
             const downloadResponse = http.get(archiveBody.archiveUrl, {
+              timeout: "10m",
               tags: { endpoint: "download", test_scenario: "load_test" },
             });
             check(downloadResponse, {

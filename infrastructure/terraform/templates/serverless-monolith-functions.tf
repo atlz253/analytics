@@ -15,9 +15,10 @@ resource "yandex_function" "report_function" {
     name = "report-function"
     runtime = "nodejs22"
     user_hash = filesha256("dist.zip")
-    memory = "1024"
+    memory = "8192"
     entrypoint = "index.handler"
-    execution_timeout  = "300"
+    execution_timeout  = "600"
+    concurrency = "16"
     content {
         zip_filename = "./dist.zip"
     }
@@ -28,8 +29,8 @@ resource "yandex_function_trigger" "report_trigger" {
     message_queue {
         queue_id = "<report_queue_id>"
         service_account_id = "<queues_service_account_id>"
-        batch_size = "1"
-        batch_cutoff = "10"
+        batch_size = "100"
+        batch_cutoff = "1"
         visibility_timeout = 600
     }
     function {
@@ -43,9 +44,10 @@ resource "yandex_function" "archive_function" {
     name = "archive-function"
     runtime = "nodejs22"
     user_hash = filesha256("dist-archive.zip")
-    memory = "1024"
+    memory = "8192"
     entrypoint = "index.handler"
-    execution_timeout  = "300"
+    execution_timeout  = "600"
+    concurrency = "16"
     content {
         zip_filename = "./dist-archive.zip"
     }
@@ -56,8 +58,8 @@ resource "yandex_function_trigger" "archive_trigger" {
     message_queue {
         queue_id = "<archive_queue_id>"
         service_account_id = "<queues_service_account_id>"
-        batch_size = "1"
-        batch_cutoff = "10"
+        batch_size = "10"
+        batch_cutoff = "1"
         visibility_timeout = 600
     }
     function {

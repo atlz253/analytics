@@ -1,10 +1,13 @@
 import { faker } from "@faker-js/faker";
 import { check, sleep } from "k6";
 import http from "k6/http";
+import { Options } from "k6/options";
+
+const SERVER_URL = "http://host.docker.internal:3000";
 
 faker.seed(27);
 
-export const options = {
+export const options: Options = {
   stages: [
     { duration: "2m", target: 500 },
     { duration: "5m", target: 500 },
@@ -31,23 +34,20 @@ export const options = {
 export default function () {
   const payload = {
     eventType: "userActivity",
-    occurrenceTime: faker.date.past().toISOString(),
+    occurrenceTime: faker.date.recent().toISOString(),
     type: faker.word.verb(),
     userUUID: faker.string.uuid(),
     page: faker.word.noun(),
   };
 
-  const response = http.post(
-    "http://host.docker.internal:3000/event",
-    JSON.stringify(payload),
-    {
-      headers: { "Content-Type": "application/json" },
-      tags: {
-        endpoint: "event",
-        test_scenario: "load_test",
-      },
-    }
-  );
+  const response = http.post(`${SERVER_URL}/event`, JSON.stringify(payload), {
+    timeout: "10m",
+    headers: { "Content-Type": "application/json" },
+    tags: {
+      endpoint: "event",
+      test_scenario: "load_test",
+    },
+  });
 
   const checksResult = check(
     response,
@@ -69,7 +69,7 @@ export default function () {
     {
       endpoint: "event",
       test_type: "performance",
-    }
+    },
   );
 
   if (!checksResult) {
@@ -93,16 +93,17 @@ export function setup() {
   };
 
   const response = http.post(
-    "http://host.docker.internal:3000/event",
+    `${SERVER_URL}/event`,
     JSON.stringify(testPayload),
     {
+      timeout: "10m",
       headers: { "Content-Type": "application/json" },
-    }
+    },
   );
 
   if (response.status !== 200) {
     console.warn(
-      `Предупреждение: event эндпоинт отвечает со статусом ${response.status}`
+      `Предупреждение: event эндпоинт отвечает со статусом ${response.status}`,
     );
     console.warn(`Ответ: ${response.body}`);
   } else {
@@ -117,7 +118,7 @@ export function setup() {
 
   return {
     startTime: new Date().toISOString(),
-    targetUrl: "http://host.docker.internal:3000/event",
+    targetUrl: `${SERVER_URL}/event`,
   };
 }
 

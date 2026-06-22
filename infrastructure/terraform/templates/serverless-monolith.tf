@@ -120,12 +120,12 @@ resource "yandex_iam_service_account_static_access_key" "queues_service_account_
 
 resource "yandex_message_queue" "report_queue_request" {
   name = "report_queue_request"
-  visibility_timeout_seconds = 600
+  visibility_timeout_seconds = 5
   receive_wait_time_seconds  = 20
   message_retention_seconds  = 1209600
   redrive_policy = jsonencode({
     deadLetterTargetArn = yandex_message_queue.report_deadletter_queue_request.arn
-    maxReceiveCount     = 3
+    maxReceiveCount     = 25
   })
 
   access_key = yandex_iam_service_account_static_access_key.queues_service_account_static_key.access_key
@@ -143,12 +143,12 @@ resource "yandex_message_queue" "report_deadletter_queue_request" {
 
 resource "yandex_message_queue" "report_queue_response" {
   name = "report_queue_response"
-  visibility_timeout_seconds = 600
+  visibility_timeout_seconds = 5
   receive_wait_time_seconds  = 20
   message_retention_seconds  = 1209600
   redrive_policy = jsonencode({
     deadLetterTargetArn = yandex_message_queue.report_deadletter_queue_response.arn
-    maxReceiveCount     = 3
+    maxReceiveCount     = 25
   })
 
   access_key = yandex_iam_service_account_static_access_key.queues_service_account_static_key.access_key
@@ -166,12 +166,12 @@ resource "yandex_message_queue" "report_deadletter_queue_response" {
 
 resource "yandex_message_queue" "archive_queue_request" {
   name = "archive_queue_request"
-  visibility_timeout_seconds = 600
+  visibility_timeout_seconds = 5
   receive_wait_time_seconds  = 20
   message_retention_seconds  = 1209600
   redrive_policy = jsonencode({
     deadLetterTargetArn = yandex_message_queue.archive_deadletter_queue_request.arn
-    maxReceiveCount     = 3
+    maxReceiveCount     = 25
   })
 
   access_key = yandex_iam_service_account_static_access_key.queues_service_account_static_key.access_key
@@ -189,12 +189,12 @@ resource "yandex_message_queue" "archive_deadletter_queue_request" {
 
 resource "yandex_message_queue" "archive_queue_response" {
   name = "archive_queue_response"
-  visibility_timeout_seconds = 600
+  visibility_timeout_seconds = 5
   receive_wait_time_seconds  = 20
   message_retention_seconds  = 1209600
   redrive_policy = jsonencode({
     deadLetterTargetArn = yandex_message_queue.archive_deadletter_queue_response.arn
-    maxReceiveCount     = 3
+    maxReceiveCount     = 25
   })
 
   access_key = yandex_iam_service_account_static_access_key.queues_service_account_static_key.access_key

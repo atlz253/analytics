@@ -2,6 +2,8 @@ import { faker } from "@faker-js/faker";
 import { check, sleep } from "k6";
 import http from "k6/http";
 
+const SERVER_URL = "http://host.docker.internal:3000";
+
 faker.seed(27);
 
 export const options = {
@@ -74,11 +76,10 @@ export function setup() {
   // Send 100 initial events to create a data pool
   for (let i = 0; i < 100; i++) {
     const payload = generateEventPayload();
-    http.post(
-      "http://host.docker.internal:3000/event",
-      JSON.stringify(payload),
-      { headers: { "Content-Type": "application/json" } }
-    );
+    http.post(`${SERVER_URL}/event`, JSON.stringify(payload), {
+      timeout: "10m",
+      headers: { "Content-Type": "application/json" },
+    });
   }
   return { minDate, maxDate };
 }
@@ -87,12 +88,13 @@ export default function () {
   // Send an event to /event
   const eventPayload = generateEventPayload();
   const eventResponse = http.post(
-    "http://host.docker.internal:3000/event",
+    `${SERVER_URL}/event`,
     JSON.stringify(eventPayload),
     {
+      timeout: "10m",
       headers: { "Content-Type": "application/json" },
       tags: { endpoint: "event" },
-    }
+    },
   );
   check(eventResponse, { "event status is 200": (r) => r.status === 200 });
 
@@ -103,12 +105,13 @@ export default function () {
 
     // Scenario 1: Fetch users and then a specific user
     const usersResponse = http.post(
-      "http://host.docker.internal:3000/report/users",
+      `${SERVER_URL}/report/users`,
       JSON.stringify(timeIntervalPayload),
       {
+        timeout: "10m",
         headers: { "Content-Type": "application/json" },
         tags: { endpoint: "report_users" },
-      }
+      },
     );
     if (
       check(usersResponse, {
@@ -125,14 +128,11 @@ export default function () {
             userUUID: randomUUID,
             timeInterval: timeIntervalPayload.timeInterval,
           };
-          http.post(
-            "http://host.docker.internal:3000/report/user",
-            JSON.stringify(userPayload),
-            {
-              headers: { "Content-Type": "application/json" },
-              tags: { endpoint: "report_user" },
-            }
-          );
+          http.post(`${SERVER_URL}/report/user`, JSON.stringify(userPayload), {
+            timeout: "10m",
+            headers: { "Content-Type": "application/json" },
+            tags: { endpoint: "report_user" },
+          });
         }
       } catch (e) {
         console.error(`Error parsing /report/users response: ${e}`);
@@ -141,22 +141,24 @@ export default function () {
 
     // Scenario 2: Fetch event types
     http.post(
-      "http://host.docker.internal:3000/report/eventTypes",
+      `${SERVER_URL}/report/eventTypes`,
       JSON.stringify(timeIntervalPayload),
       {
+        timeout: "10m",
         headers: { "Content-Type": "application/json" },
         tags: { endpoint: "report_eventTypes" },
-      }
+      },
     );
 
     // Scenario 3: Fetch events
     http.post(
-      "http://host.docker.internal:3000/report/events",
+      `${SERVER_URL}/report/events`,
       JSON.stringify(timeIntervalPayload),
       {
+        timeout: "10m",
         headers: { "Content-Type": "application/json" },
         tags: { endpoint: "report_events" },
-      }
+      },
     );
   }
 

@@ -30,9 +30,10 @@ resource "yandex_function" "event_function" {
     name = "event-function"
     runtime = "nodejs22"
     user_hash = filesha256("dist-event.zip")
-    memory = "1024"
+    memory = "8192"
     entrypoint = "index.handler"
-    execution_timeout  = "300"
+    execution_timeout  = "600"
+    concurrency = "16"
     content {
         zip_filename = "./dist-event.zip"
     }
@@ -58,9 +59,10 @@ resource "yandex_function" "event_request_function" {
     name = "event-request-function"
     runtime = "nodejs22"
     user_hash = filesha256("dist-event-request.zip")
-    memory = "1024"
+    memory = "8192"
     entrypoint = "index.handler"
-    execution_timeout  = "300"
+    execution_timeout  = "600"
+    concurrency = "16"
     content {
         zip_filename = "./dist-event-request.zip"
     }
@@ -70,9 +72,10 @@ resource "yandex_function" "report_function" {
     name = "report-function"
     runtime = "nodejs22"
     user_hash = filesha256("dist.zip")
-    memory = "1024"
+    memory = "8192"
     entrypoint = "index.handler"
-    execution_timeout  = "300"
+    execution_timeout  = "600"
+    concurrency = "16"
     content {
         zip_filename = "./dist.zip"
     }
@@ -98,9 +101,10 @@ resource "yandex_function" "report_request_function_users" {
     name = "report-request-function-users"
     runtime = "nodejs22"
     user_hash = filesha256("dist-report-request.zip")
-    memory = "1024"
+    memory = "8192"
     entrypoint = "index.handleUsersReport"
-    execution_timeout  = "300"
+    execution_timeout  = "600"
+    concurrency = "16"
     content {
         zip_filename = "./dist-report-request.zip"
     }
@@ -110,9 +114,10 @@ resource "yandex_function" "report_request_function_user" {
     name = "report-request-function-user"
     runtime = "nodejs22"
     user_hash = filesha256("dist-report-request.zip")
-    memory = "1024"
+    memory = "8192"
     entrypoint = "index.handleUserReport"
-    execution_timeout  = "300"
+    execution_timeout  = "600"
+    concurrency = "16"
     content {
         zip_filename = "./dist-report-request.zip"
     }
@@ -122,9 +127,10 @@ resource "yandex_function" "report_request_function_events" {
     name = "report-request-function-events"
     runtime = "nodejs22"
     user_hash = filesha256("dist-report-request.zip")
-    memory = "1024"
+    memory = "8192"
     entrypoint = "index.handleEventsReport"
-    execution_timeout  = "300"
+    execution_timeout  = "600"
+    concurrency = "16"
     content {
         zip_filename = "./dist-report-request.zip"
     }
@@ -134,9 +140,10 @@ resource "yandex_function" "report_request_function_event_types" {
     name = "report-request-function-event-types"
     runtime = "nodejs22"
     user_hash = filesha256("dist-report-request.zip")
-    memory = "1024"
+    memory = "8192"
     entrypoint = "index.handleEventTypesReport"
-    execution_timeout  = "300"
+    execution_timeout  = "600"
+    concurrency = "16"
     content {
         zip_filename = "./dist-report-request.zip"
     }
@@ -146,9 +153,10 @@ resource "yandex_function" "archive_function" {
     name = "archive-function"
     runtime = "nodejs22"
     user_hash = filesha256("dist-archive.zip")
-    memory = "1024"
+    memory = "8192"
     entrypoint = "index.handler"
-    execution_timeout  = "300"
+    execution_timeout  = "600"
+    concurrency = "16"
     content {
         zip_filename = "./dist-archive.zip"
     }
@@ -174,9 +182,10 @@ resource "yandex_function" "archive_request_function" {
     name = "archive-request-function"
     runtime = "nodejs22"
     user_hash = filesha256("dist-archive-request.zip")
-    memory = "1024"
+    memory = "8192"
     entrypoint = "index.handler"
-    execution_timeout  = "300"
+    execution_timeout  = "600"
+    concurrency = "16"
     content {
         zip_filename = "./dist-archive-request.zip"
     }

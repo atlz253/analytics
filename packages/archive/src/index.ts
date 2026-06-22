@@ -11,7 +11,7 @@ import { zipJSON } from "./archive.js";
 import { Storage, storageOptionsSchema } from "./storage.js";
 import { storage as initStorage } from "./storage.js";
 
-const QUEUE_REPLY_WAIT_TIMEOUT = 60000;
+const QUEUE_REPLY_WAIT_TIMEOUT = 30000;
 
 export const configSchema = z.object({
   storage: storageOptionsSchema,
@@ -155,8 +155,8 @@ export class CloudFunctionArchive extends AbstractArchive {
         const res = await this.#messageQueue
           .receiveMessage({
             QueueUrl: this.#responseQueueURL,
-            WaitTimeSeconds: 20,
-            MaxNumberOfMessages: 10,
+            WaitTimeSeconds: 1,
+            MaxNumberOfMessages: 100,
             MessageAttributeNames: ["All"],
           })
           .promise();
